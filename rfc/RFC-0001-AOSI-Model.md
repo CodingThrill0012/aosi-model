@@ -7,8 +7,8 @@
 | **Version** | 1.2.1 (Final Draft for RFC) — *Version 1.2 - Advanced Implementation* |
 | **Status** | Proposed Standard \| Draft for Public Comment |
 | **Category** | Architectural Reference Model (Informational / Standards Track candidate) |
-| **Submitted by** | Divyendu Bhatt (Conceptual Architect) |
-| **Contact** | [Author Email/LinkedIn Handle] |
+| **Author** | Divyendu Bhatt (Conceptual Architect) |
+| **Contact** | https://github.com/CodingThrill0012 (GitHub: @CodingThrill0012) |
 | **Repository** | https://github.com/CodingThrill0012/aosi-model |
 | **Discussion** | https://github.com/CodingThrill0012/aosi-model/issues |
 | **Date** | 2026-11-09 (this revision; originally drafted 2023-10-26) |
@@ -39,9 +39,10 @@ This document is a **Proposed Standard** released as a **Draft for Public Commen
 7. [Diagnostic & Troubleshooting Matrix](#7-diagnostic--troubleshooting-matrix)
 8. [Security Considerations](#8-security-considerations)
 9. [Future Roadmap](#9-future-roadmap)
-10. [Applying the Model](#10-applying-the-model)
-11. [Revision History](#11-revision-history)
-12. [License and Citation](#12-license-and-citation)
+10. [Related Work and Novelty](#10-related-work-and-novelty)
+11. [Applying the Model](#11-applying-the-model)
+12. [Revision History](#12-revision-history)
+13. [License and Citation](#13-license-and-citation)
 - [Appendix A: Technology-to-Layer Mapping](#appendix-a-technology-to-layer-mapping)
 - [Appendix B: Proposed Telemetry Attributes](#appendix-b-proposed-telemetry-attributes)
 
@@ -68,7 +69,8 @@ The OSI reference model (ISO/IEC 7498-1) demonstrated that a layered decompositi
 - defines a canonical **data-state chain** — *JSON Payload → Enriched Prompt → Vector Chunks → Batched Tensors → Hidden States → Tensor IR → Silicon Voltages* — analogous to OSI protocol data units (§4.3);
 - specifies a **request lifecycle** down and up the stack (§6);
 - specifies a **layer-isolation diagnostic method** (§7);
-- places **security considerations** at the layer where each threat materializes (§8); and
+- places **security considerations** at the layer where each threat materializes (§8);
+- positions AOSI against prior standards, industry stack models and security frameworks (§10); and
 - reserves **Layers 8 and 9** and a cross-layer optimization plane for future work (§9).
 
 ### **1.3 Scope and non-goals**
@@ -603,7 +605,88 @@ The following extensions are reserved. They are **informative** in this revision
 
 ---
 
-## **10. Applying the Model**
+## **10. Related Work and Novelty**
+
+*Informative.* AOSI is not the first layered description of AI systems, and it is not intended to replace any of the works below. This section records the prior work the model builds on, how AOSI relates to each, and what AOSI does and does not claim as new. References are listed in §10.6; every entry was checked to exist at the time of this revision.
+
+### **10.1 Layered reference models and AI standards**
+
+- **OSI Basic Reference Model (ISO/IEC 7498-1:1994; ITU-T X.200) [R1, R2].** AOSI borrows its method from OSI: a fixed number of layers, a service boundary between adjacent layers, a named data unit at each boundary and a model that "does not intend to serve as an implementation specification". AOSI applies that method to a different domain (generative AI execution on one or more accelerators). It does not define wire protocols, and it is not an extension of OSI.
+- **ISO/IEC 22989:2022, AI concepts and terminology [R3].** This standard sets out vocabulary and concepts for AI across all types of organization. AOSI does not redefine general AI terms. Where a term in §2.2 overlaps with ISO/IEC 22989, the ISO/IEC definition should take precedence, and future revisions of this RFC SHOULD align their terminology with it.
+- **ISO/IEC 23053:2022, Framework for AI systems using machine learning [R4].** This standard describes the components and functions of ML-based AI systems in a structured, technology-neutral way, covering the whole ML system. AOSI is narrower and more operational. It covers **inference-time execution of generative models**, splits that execution into seven layers from the API payload down to device execution, and names the data state at each boundary. In practice, ISO/IEC 23053 helps describe *what* an ML system consists of, and AOSI helps locate *where* in the serving path a behaviour, cost or fault occurs.
+- **NIST AI Risk Management Framework 1.0 (NIST AI 100-1) and the Generative AI Profile (NIST AI 600-1) [R5, R6].** These are organizational risk-management frameworks (Govern, Map, Measure, Manage). They are not technical layer models. AOSI complements them by giving a technical location for the measurement and controls that the RMF calls for. For example, the "Measure" and "Manage" activities for a retrieval system can be scoped to L5.
+
+### **10.2 Industry AI / LLM stack models**
+
+- **a16z, "Emerging Architectures for LLM Applications" (2023) [R7].** This widely referenced reference architecture describes the components of an LLM application: data pipelines, embedding models, vector databases, orchestration, APIs and plugins, LLM caches, logging and validation, and app hosting. Its focus is the **application tier**, which roughly corresponds to AOSI L5–L7. It does not break down serving, model, framework or hardware tiers, and it does not define boundary data states.
+- **Google Cloud, "MLOps: Continuous delivery and automation pipelines in machine learning" [R8].** This reference describes MLOps maturity levels and the pipeline components for training, validating and deploying models (CI/CD/CT). It is organized around the **ML lifecycle**, not around the layers that one inference request passes through. AOSI's out-of-scope training concerns (§1.3, §9.2) are where lifecycle models such as this apply.
+- **MLCommons MLPerf Inference [R9].** This is a benchmark suite, not a layer model. It is relevant because it measures system-level inference performance that, in AOSI terms, depends jointly on L1–L4. AOSI's latency decomposition (§7.2) is meant to explain *which layer* drives a benchmark result.
+- **Serving-system research, e.g. PagedAttention / vLLM [R10].** Work like this shows that bottlenecks at the serving tier (KV-cache memory management) can dominate throughput. That evidence supports treating L4 as a separate layer, distinct from L3 (model architecture) and L1 (memory hardware).
+
+### **10.3 Security frameworks for AI systems**
+
+- **OWASP Top 10 for LLM Applications 2025 [R11].** This is a ranked list of risk categories for LLM applications. It does not assign a location in the stack. AOSI §8 can be read as a placement of these categories by layer:
+
+| OWASP LLM Top 10 (2025) | Primary AOSI layer(s) |
+|---|---|
+| LLM01 Prompt Injection | L6 (direct via L7; indirect via L5 content) |
+| LLM02 Sensitive Information Disclosure | L6, L5, L3 |
+| LLM03 Supply Chain | L2, L3 |
+| LLM04 Data and Model Poisoning | L3 (weights), L5 (retrieval corpus) |
+| LLM05 Improper Output Handling | L6, L7 |
+| LLM06 Excessive Agency | L6 (and future L8, §9.1) |
+| LLM07 System Prompt Leakage | L6 |
+| LLM08 Vector and Embedding Weaknesses | L5 |
+| LLM09 Misinformation | L5, L7 (cross-layer) |
+| LLM10 Unbounded Consumption | L4, L6 |
+
+- **MITRE ATLAS [R12]** is a knowledge base of adversary tactics and techniques against AI-enabled systems, modelled on MITRE ATT&CK. **NIST AI 100-2 E2025 [R13]** gives a taxonomy and terminology of adversarial machine-learning attacks and mitigations. Both describe *what* an adversary does. AOSI adds *where* the technique materializes, so that detection and controls can be placed at a specific layer under principle P7.
+- **Google Secure AI Framework (SAIF) [R14]** is a conceptual framework of security practices for AI systems. AOSI is compatible with it and can serve as the layer index for mapping SAIF-style controls.
+
+### **10.4 Other OSI-inspired AI layer models**
+
+Several authors have proposed OSI-inspired layer models for AI. The ones identified for this revision are:
+
+- **Shapiro et al., "Conceptual Framework for Autonomous Cognitive Entities" (ACE, arXiv:2310.06775, 2023) [R15].** A six-layer **cognitive architecture** for autonomous agents, running from an Aspirational Layer down to Task Prosecution. It layers an agent's *reasoning and control*, not the execution path of a request. It is relevant to AOSI's future L8 (Agentic Workflows).
+- **Rodrigo-Ginés, "Toward an OSI-Inspired Stack for Agentic AI: From Fragmented Frameworks to Open Standards" (Zenodo, 2025, doi:10.5281/zenodo.17099409) [R16].** A seven-layer **interoperability** stack for multi-agent systems, from physical infrastructure and runtime up to agent-to-agent communication, coordination and governance. Its main concern is interoperability *between agents*. AOSI's concern is the execution path *within* one generative inference request.
+
+AOSI does not claim to be the first OSI analogy for AI. Its scope (single-request generative inference execution) and its emphasis on boundary data states and diagnostics are what set it apart from these models.
+
+### **10.5 Novelty claims and limitations**
+
+On the evidence reviewed above, AOSI makes the following **specific** claims of contribution:
+
+1. **An end-to-end, named data-state chain** for generative inference, *JSON Payload → Enriched Prompt → Vector Chunks → Batched Tensors → Hidden States → Tensor IR → Silicon Voltages* (§4.3). None of the works reviewed define one named data state at every boundary from the API down to the device.
+2. **A full-depth split of the serving path.** AOSI places the application, orchestration, retrieval, serving, model, framework/compiler and hardware tiers in one ordered stack. Industry stack diagrams usually stop at the model API (application view) or start at the accelerator (infrastructure view).
+3. **Per-layer diagnostics** (§7). AOSI provides a layer-isolation method and a troubleshooting matrix that attribute latency and failures to a single layer (e.g., L4 KV-cache pressure vs L5 retrieval lag vs L1 HBM bandwidth saturation), with proposed telemetry attributes (Appendix B).
+4. **Cross-layer security placement** (§8, §10.3). Each threat is assigned to the layer where it materializes, which turns existing threat catalogues (OWASP, ATLAS, NIST AML) into a layer-indexed control map.
+
+**Limitations.** AOSI is a conceptual, informational model. It has not been adopted or endorsed by ISO/IEC, ITU-T, IETF, NIST or any other body. Its layer boundaries have not yet been validated empirically across many production deployments. Training pipelines are out of scope for this revision. Reviewers are invited to submit counter-examples, overlapping prior art not listed here, and evidence for or against each novelty claim, through the process in `CONTRIBUTING.md`.
+
+### **10.6 Informative references**
+
+| Ref | Reference |
+|---|---|
+| [R1] | ISO/IEC 7498-1:1994, *Information technology — Open Systems Interconnection — Basic Reference Model: The Basic Model*. https://www.iso.org/standard/20269.html |
+| [R2] | ITU-T Recommendation X.200, *Open Systems Interconnection — Basic Reference Model: The basic model*. https://www.itu.int/rec/T-REC-X.200 |
+| [R3] | ISO/IEC 22989:2022, *Information technology — Artificial intelligence — Artificial intelligence concepts and terminology*. ISO/IEC JTC 1/SC 42. https://www.iso.org/standard/74296.html |
+| [R4] | ISO/IEC 23053:2022, *Framework for Artificial Intelligence (AI) Systems Using Machine Learning (ML)*. ISO/IEC JTC 1/SC 42. https://www.iso.org/standard/74438.html |
+| [R5] | NIST AI 100-1, *Artificial Intelligence Risk Management Framework (AI RMF 1.0)*, 2023. https://www.nist.gov/itl/ai-risk-management-framework |
+| [R6] | NIST AI 600-1, *Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile*, 2024. https://doi.org/10.6028/NIST.AI.600-1 |
+| [R7] | M. Bornstein and R. Radovanovic, "Emerging Architectures for LLM Applications," Andreessen Horowitz, 20 June 2023. https://a16z.com/emerging-architectures-for-llm-applications/ |
+| [R8] | Google Cloud, "MLOps: Continuous delivery and automation pipelines in machine learning." https://cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning |
+| [R9] | MLCommons, *MLPerf Inference: Datacenter*. https://mlcommons.org/benchmarks/inference-datacenter/ |
+| [R10] | W. Kwon et al., "Efficient Memory Management for Large Language Model Serving with PagedAttention," SOSP 2023. arXiv:2309.06180. https://arxiv.org/abs/2309.06180 |
+| [R11] | OWASP GenAI Security Project, *OWASP Top 10 for LLM Applications 2025*. https://genai.owasp.org/llm-top-10/ |
+| [R12] | MITRE, *ATLAS (Adversarial Threat Landscape for Artificial-Intelligence Systems)*. https://atlas.mitre.org/ |
+| [R13] | NIST AI 100-2 E2025, *Adversarial Machine Learning: A Taxonomy and Terminology of Attacks and Mitigations*. https://csrc.nist.gov/pubs/ai/100/2/e2025/final |
+| [R14] | Google, *Secure AI Framework (SAIF)*. https://saif.google/ |
+| [R15] | D. Shapiro, W. Li, M. Delaflor et al., "Conceptual Framework for Autonomous Cognitive Entities," arXiv:2310.06775, 2023. https://arxiv.org/abs/2310.06775 |
+| [R16] | F.-J. Rodrigo-Ginés, "Toward an OSI-Inspired Stack for Agentic AI: From Fragmented Frameworks to Open Standards," Zenodo, 2025. https://doi.org/10.5281/zenodo.17099409 |
+
+---
+
+## **11. Applying the Model**
 
 AOSI is intended for the following uses. None constitutes certification.
 
@@ -617,25 +700,25 @@ A description of a system **claiming AOSI alignment** SHOULD include: (a) the co
 
 ---
 
-## **11. Revision History**
+## **12. Revision History**
 
 | Version | Date | Description |
 |---|---|---|
 | 1.0 | 2023-10-26 | Originally drafted: initial conceptual definition of the seven-layer stack. |
 | 1.2 | — | *Version 1.2 - Advanced Implementation:* layer definitions extended with components, data states and future roadmap. |
-| 1.2.1 | 2026-11-09 | Final Draft for RFC: normative structure (BCP 14 language), per-layer interfaces, observability signals and failure modes, request lifecycle, Diagnostic & Troubleshooting Matrix, security considerations, governance via `CONTRIBUTING.md`. |
+| 1.2.1 | 2026-11-09 | Final Draft for RFC: normative structure (BCP 14 language), per-layer interfaces, observability signals and failure modes, request lifecycle, Diagnostic & Troubleshooting Matrix, security considerations, Related Work and Novelty (§10), governance via `CONTRIBUTING.md`; citation metadata (`CITATION.cff`, `.zenodo.json`). |
 
 ---
 
-## **12. License and Citation**
+## **13. License and Citation**
 
-### **12.1 License**
+### **13.1 License**
 
 © Divyendu Bhatt. Licensed under CC-BY-4.0.
 
 This work is licensed under the **Creative Commons Attribution 4.0 International License (CC-BY-4.0)**. You are free to share and adapt this material for any purpose, including commercially, provided you give appropriate credit to **Divyendu Bhatt** as Conceptual Architect of the AOSI Reference Model, provide a link to the license, and indicate if changes were made. Full legal code: https://creativecommons.org/licenses/by/4.0/legalcode
 
-### **12.2 Suggested citation**
+### **13.2 Suggested citation**
 
 ```text
 Bhatt, D. (2026). AOSI-RFC-0001: The AI Open Systems Interconnection (AOSI) Reference Model:
