@@ -4,6 +4,14 @@ type: software
 title: "AOSI-RFC-0001: The AI Open Systems Interconnection (AOSI) Reference Model: A 7-Layer Stack for Generative AI Execution"
 version: "1.2.1"
 date-released: "2026-11-09"
+doi: "10.5281/zenodo.24073122"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.24073121"
+    description: "Concept DOI (all versions)"
+  - type: doi
+    value: "10.5281/zenodo.24073122"
+    description: "Version 1.2.1"
 license: CC-BY-4.0
 authors:
   - family-names: Bhatt

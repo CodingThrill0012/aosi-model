@@ -141,14 +141,16 @@ Full guidelines are in **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 
 If you use, extend or reference the AOSI Reference Model, please cite it as follows. Machine-readable metadata is in [`CITATION.cff`](CITATION.cff); GitHub's **"Cite this repository"** button uses it.
 
-> **DOI:** a Zenodo DOI badge will be added here once the archived release exists.
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24073122.svg)](https://doi.org/10.5281/zenodo.24073122)
+
+> **DOI:** v1.2.1 is archived on Zenodo as [10.5281/zenodo.24073122](https://doi.org/10.5281/zenodo.24073122). To cite all versions, use the concept DOI [10.5281/zenodo.24073121](https://doi.org/10.5281/zenodo.24073121).
 
 **APA (7th ed.)**
 
 ```text
 Bhatt, D. (2026). AOSI-RFC-0001: The AI Open Systems Interconnection (AOSI) Reference Model:
 A 7-layer stack for generative AI execution (Version 1.2.1, Final Draft for RFC) [Proposed standard,
-draft for public comment]. GitHub. https://github.com/CodingThrill0012/aosi-model
+draft for public comment]. Zenodo. https://doi.org/10.5281/zenodo.24073122
 ```
 
 **BibTeX**
@@ -164,7 +166,8 @@ draft for public comment]. GitHub. https://github.com/CodingThrill0012/aosi-mode
   year        = {2026},
   month       = nov,
   note        = {Final Draft for RFC. Proposed Standard, Draft for Public Comment. Licensed under CC-BY-4.0},
-  url         = {https://github.com/CodingThrill0012/aosi-model}
+  doi         = {10.5281/zenodo.24073122},
+  url         = {https://doi.org/10.5281/zenodo.24073122}
 }
 ```
 
