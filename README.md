@@ -2,7 +2,7 @@
 
 ### **A 7-Layer Stack for Generative AI Execution (From GPU to Token Flow)**
 
-**Conceptual Architect:** Divyendu Bhatt
+**Author / Conceptual Architect:** Divyendu Bhatt · **Contact:** [github.com/CodingThrill0012](https://github.com/CodingThrill0012)
 **Specification:** [AOSI-RFC-0001](rfc/RFC-0001-AOSI-Model.md) · **Version:** 1.2.1 (Final Draft for RFC) · **Status:** Proposed Standard | Draft for Public Comment
 **License:** [CC-BY-4.0](LICENSE) · © Divyendu Bhatt
 
@@ -16,6 +16,7 @@
 2. [The 7-Layer Architecture Summary](#2-the-7-layer-architecture-summary)
 3. [Repository Structure](#3-repository-structure)
 4. [Quick Links & How to Participate in the RFC](#4-quick-links--how-to-participate-in-the-rfc)
+5. [How to Cite](#5-how-to-cite)
 
 ---
 
@@ -118,6 +119,8 @@ aosi-model/
 | Diagnostics ("Wireshark for AI") | [RFC-0001 §7 — Diagnostic & Troubleshooting Matrix](rfc/RFC-0001-AOSI-Model.md#7-diagnostic--troubleshooting-matrix) |
 | Security | [RFC-0001 §8 — Security Considerations](rfc/RFC-0001-AOSI-Model.md#8-security-considerations) |
 | Roadmap | [RFC-0001 §9 — Future Roadmap](rfc/RFC-0001-AOSI-Model.md#9-future-roadmap) |
+| Related work | [RFC-0001 §10 — Related Work and Novelty](rfc/RFC-0001-AOSI-Model.md#10-related-work-and-novelty) |
+| Citation metadata | [CITATION.cff](CITATION.cff) · [.zenodo.json](.zenodo.json) |
 | Governance | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Discussion | [GitHub Issues](https://github.com/CodingThrill0012/aosi-model/issues) |
 
@@ -132,12 +135,37 @@ AOSI-RFC-0001 is in its **public comment period**. Engineers, researchers and ML
 
 Full guidelines are in **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 
-### **4.3 Citation**
+---
+
+## **5. How to Cite**
+
+If you use, extend or reference the AOSI Reference Model, please cite it as follows. Machine-readable metadata is in [`CITATION.cff`](CITATION.cff); GitHub's **"Cite this repository"** button uses it.
+
+> **DOI:** a Zenodo DOI badge will be added here once the archived release exists.
+
+**APA (7th ed.)**
 
 ```text
 Bhatt, D. (2026). AOSI-RFC-0001: The AI Open Systems Interconnection (AOSI) Reference Model:
-A 7-Layer Stack for Generative AI Execution. Version 1.2.1 (Final Draft for RFC).
-https://github.com/CodingThrill0012/aosi-model
+A 7-layer stack for generative AI execution (Version 1.2.1, Final Draft for RFC) [Proposed standard,
+draft for public comment]. GitHub. https://github.com/CodingThrill0012/aosi-model
+```
+
+**BibTeX**
+
+```bibtex
+@techreport{bhatt2026aosi,
+  author      = {Bhatt, Divyendu},
+  title       = {{AOSI-RFC-0001}: The {AI} Open Systems Interconnection ({AOSI}) Reference Model: A 7-Layer Stack for Generative {AI} Execution},
+  institution = {AOSI Model Repository},
+  type        = {RFC},
+  number      = {AOSI-RFC-0001},
+  version     = {1.2.1},
+  year        = {2026},
+  month       = nov,
+  note        = {Final Draft for RFC. Proposed Standard, Draft for Public Comment. Licensed under CC-BY-4.0},
+  url         = {https://github.com/CodingThrill0012/aosi-model}
+}
 ```
 
 ---
