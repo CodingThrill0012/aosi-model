@@ -1,176 +1,183 @@
-# **The AI Open Systems Interconnection (AOSI) Reference Model**
+# DAIRM: Divyendu's Data-State-Aware AI Reference Model for Generative AI Inference Systems
 
-### **A 7-Layer Stack for Generative AI Execution (From GPU to Token Flow)**
+**A reference model for the request path of generative AI inference: six layers, three planes, a named data state at every boundary, and a diagnostic method built on them.**
 
-**Author / Conceptual Architect:** Divyendu Bhatt · **Contact:** [github.com/CodingThrill0012](https://github.com/CodingThrill0012)
-**Specification:** [AOSI-RFC-0001](rfc/RFC-0001-AOSI-Model.md) · **Version:** 1.2.1 (Final Draft for RFC) · **Status:** Proposed Standard | Draft for Public Comment
-**License:** [CC-BY-4.0](LICENSE) · © Divyendu Bhatt
+**Author:** Divyendu Bhatt (independent researcher) · **Contact:** Divyendu.bhatt@gmail.com · [github.com/CodingThrill0012](https://github.com/CodingThrill0012)
+**Document:** [DAIRM-TR-0001](docs/DAIRM-TR-0001.md) · **Version:** 2.0.0 · **Status:** Technical Report / Working Draft (not an IETF RFC and not a standard)
+**License:** [CC-BY-4.0](LICENSE) · © 2026 Divyendu Bhatt · **Supersedes:** AOSI v1.2.1
 
-![AOSI-RFC-0001 overview: the seven AOSI layers, from Physical Infrastructure (L1) to the Application Layer (L7), with the future roadmap for Layers 8 and 9](assets/aosi-rfc-0001-overview.png)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24073121.svg)](https://doi.org/10.5281/zenodo.24073121)
 
----
+![DAIRM overview: six request-path layers from L6 Application to L1 Physical Compute & Interconnect, the data state on each boundary, and the Context Services, Build/Deploy and Management planes](assets/dairm-overview.svg)
 
-## **Table of Contents**
-
-1. [Overview & Motivation](#1-overview--motivation)
-2. [The 7-Layer Architecture Summary](#2-the-7-layer-architecture-summary)
-3. [Repository Structure](#3-repository-structure)
-4. [Quick Links & How to Participate in the RFC](#4-quick-links--how-to-participate-in-the-rfc)
-5. [How to Cite](#5-how-to-cite)
+*Figure generated from [`assets/build_overview.py`](assets/build_overview.py); Mermaid source in [`assets/dairm-overview.mmd`](assets/dairm-overview.mmd).*
 
 ---
 
-## **1. Overview & Motivation**
+## Contents
 
-### **1.1 The problem: a stack without a reference model**
+1. [Overview](#1-overview)
+2. [The Model at a Glance](#2-the-model-at-a-glance)
+3. [Independent Development and Related Work](#3-independent-development-and-related-work)
+4. [Repository Structure](#4-repository-structure)
+5. [How to Participate](#5-how-to-participate)
+6. [How to Cite](#6-how-to-cite)
+7. [AI-Assistance Disclosure](#7-ai-assistance-disclosure)
 
-A single generated token is the product of a long causal chain. A client submits a JSON request. A gateway applies templates, policy and conversation state. A retrieval pipeline injects grounding context. A serving engine tokenizes, schedules and batches the request against a shared KV cache. A transformer executes a forward pass over quantized weights. A framework and compiler lower that pass into fused kernels and collective operations. Finally, silicon performs multiply-accumulate operations, moving bytes across HBM and interconnect fabrics under power and thermal constraints.
+---
 
-Each segment of that chain is mature on its own terms, with its own vocabulary, telemetry and owners. Application teams talk about latency and prompts; MLOps teams talk about batch sizes and KV-cache hit rates; kernel engineers talk about occupancy and arithmetic intensity; infrastructure teams talk about HBM bandwidth, NVLink topology and rack power. **There is no shared, layered model that connects them.** The consequences are concrete:
+## 1. Overview
 
-- **Fault attribution is guesswork.** A slow response can originate in retrieval, in scheduler queueing, in KV-cache eviction, in a mis-fused kernel, or in memory-bandwidth saturation. Without layer boundaries, every incident becomes a cross-team investigation from first principles.
-- **Interfaces are implicit.** The contracts between "the prompt", "the batch", "the graph" and "the device" are encoded in vendor-specific APIs rather than in stable, named abstractions.
-- **Security and governance controls are mis-placed.** Prompt-injection defenses, data-poisoning controls, model-extraction mitigations and hardware side-channel concerns each belong to a different tier of the stack, yet are frequently discussed as a single "AI security" problem.
-- **Vocabulary does not transfer.** Engineers moving between application, platform and hardware work lack a common frame for describing where a behaviour originates.
+### 1.1 The problem
 
-### **1.2 The proposal: an OSI-equivalent stack for generative AI**
+A single generated token is the product of a long causal chain. A client sends a JSON request. A gateway applies policy, templates and conversation state, and may call retrieval or tools. A serving engine tokenizes, schedules and batches the request against a shared KV cache. A runtime executes the model graph as kernels, a driver launches them, and accelerators move bytes across HBM and interconnects under power and thermal limits.
 
-The ISO/IEC OSI model gave networking a shared language: a fault could be described as "a Layer 2 problem" and every engineer understood the scope. **AOSI applies the same discipline to generative AI execution.** It decomposes the path from silicon math to application tokens into seven layers, each with:
+Each part has its own tools, telemetry and owners, so when something goes wrong it is hard to say *where*. A slow response can come from retrieval, scheduler queueing, KV-cache preemption, a slow kernel or memory-bandwidth limits, and each looks like "the model is slow".
 
-- a defined **purpose and scope**,
-- a canonical set of **core components**,
-- a named **data state** that enters and leaves the layer,
-- explicit **interfaces** to adjacent layers, and
-- characteristic **observability signals** and **failure modes**.
+### 1.2 What DAIRM adds
 
-The canonical data-state chain for a request travelling down the stack is:
+DAIRM borrows the *method* of layered reference models such as OSI (ordered layers, service boundaries, named data units) and applies it to generative AI inference. It does **not** claim the layered-stack idea or the OSI analogy as new; earlier OSI-inspired AI models exist (see §3). Its contributions are limited to three things:
+
+1. **A named, observable data state at every boundary of the inference request path**, each of which exists per request and can be captured or measured.
+2. **A boundary-attributed latency diagnostic method** that separates context-service delay, serving-engine queueing or KV-cache pressure, and memory-bandwidth-bound decode.
+3. **A layer-indexed telemetry attribute set (`dairm.*`)** that makes the method executable on OpenTelemetry traces.
+
+The down-path data states are:
 
 ```text
-JSON Payload → Enriched Prompt → Vector Chunks → Batched Tensors → Hidden States → Tensor IR → Silicon Voltages
-   (L7)            (L6)              (L5)            (L4)              (L3)           (L2)          (L1)
+request payload → enriched prompt → token-ID batch + KV-cache block table → kernel launch stream → device instruction & memory-transaction stream
+   (L6 → L5)         (L5 → L4)                (L4 → L3)                          (L3 → L2)                     (L2 → L1)
 ```
 
-On the return path, the transformation inverts: device results become logits, logits become sampled token IDs, token IDs are detokenized, filtered and streamed back to the client as response chunks.
+Context services return **retrieved passages** (text, scores, provenance) to L5. On the way back, logits become sampled token IDs, detokenized text deltas and streamed response chunks. Activations and the KV cache are resident device-memory state, and weights, tokenizers and compiled graphs are artifacts from the Build/Deploy plane, not per-request data.
 
-**Latency and computational cost increase toward the lower layers.** Upper layers dominate in semantic complexity and policy; lower layers dominate in FLOPs, bytes moved and watts consumed.
+**Where cost and latency sit.** Compute, data movement and energy concentrate in the lower layers; semantic and policy complexity concentrate in the upper layers. Latency can originate at any layer, so DAIRM attributes it per boundary instead of assuming it.
 
-### **1.3 What AOSI is — and is not**
+### 1.3 Scope
 
-| Aspect | AOSI is | AOSI is not |
+DAIRM covers the **request path of generative AI inference serving**, from the client request to the hardware execution of each token and back as a streamed response. Training, fine-tuning, data pipelines, evaluation and the model registry are out of scope; they appear only as artifacts supplied by the Build/Deploy plane. For hosted model APIs, layers below the gateway sit behind a **provider boundary**, and DAIRM states which signals stay observable there.
+
+| Aspect | DAIRM is | DAIRM is not |
 |---|---|---|
-| **Nature** | A conceptual reference model and shared vocabulary | A protocol, a product or a reference implementation |
-| **Scope** | Generative AI inference execution, end to end | A training methodology (training is addressed only where it shares layers) |
-| **Vendor stance** | Technology-neutral; vendor tools are cited as examples | An endorsement of any vendor, framework or accelerator |
-| **Use** | Architecture design, diagnostics, observability, security placement, education | A compliance certification |
+| Nature | An informative reference model and shared vocabulary | A protocol, a product, a certification or a standard |
+| Scope | The request path of generative AI inference serving | A model of training or of the full ML lifecycle |
+| Vendor stance | Technology-neutral; products are illustrative examples | An endorsement of any vendor, framework or accelerator |
 
 ---
 
-## **2. The 7-Layer Architecture Summary**
+## 2. The Model at a Glance
 
-Layers are listed from top (closest to the user) to bottom (closest to silicon). Normative definitions live in [AOSI-RFC-0001](rfc/RFC-0001-AOSI-Model.md).
+Layers are listed from top (closest to the user) to bottom (closest to hardware). Full definitions are in [DAIRM-TR-0001](docs/DAIRM-TR-0001.md).
 
-| Layer | Name | Primary Function | Core Components (illustrative) | Data State |
-|:---:|---|---|---|---|
-| **L7** | **Application Layer** | End-user interaction and UI rendering | Chat UIs, IDEs, web apps, copilots, agents; OpenAI-compatible JSON APIs; SSE/WebSocket streaming clients | **JSON Payload** (API request in; streamed token/response chunks out) |
-| **L6** | **Orchestration & Gateway** | Routing, safety, state and context management | API gateways, LangChain, LlamaIndex, prompt templates, guardrails, session/memory stores, rate limiters, model routers | **Enriched Prompt** (templated, policy-checked, stateful message sequence) |
-| **L5** | **Retrieval & Knowledge (RAG)** | Context injection, semantic search, grounding | Vector DBs (e.g., Pinecone, Milvus), embedding models, chunkers, rerankers, hybrid (lexical + dense) search | **Vector Chunks** (vector embeddings and retrieved chunks merged into context) |
-| **L4** | **Inference & Serving** | Model execution management, API caching, scheduling | vLLM, TensorRT-LLM, TGI, Triton Inference Server; PagedAttention, KV cache, continuous batching, speculative decoding, tokenizers | **Batched Tensors** (token-ID tensors, attention metadata, KV-cache block tables) |
-| **L3** | **Model & Weight Architecture** | Mathematical representation of tokens and language | Transformer blocks, attention heads, MLP/MoE experts, activations, normalization, quantized weights (FP16/BF16/FP8/INT8/INT4) | **Hidden States** (hidden states → logits → probabilities) |
-| **L2** | **Framework & Runtime** | Low-level math ops, graph compilation, parallelism | PyTorch, JAX, XLA/MLIR, Triton compiler, CUDA/ROCm, cuBLAS, FlashAttention kernels, NCCL/RCCL, DeepSpeed, Megatron-LM | **Tensor IR** (lowered graphs, fused kernels, collective schedules) |
-| **L1** | **Physical Infrastructure** | Raw power, silicon math, interconnects | GPUs (e.g., H100), TPUs and other accelerators, HBM (e.g., HBM3e), NVLink/NVSwitch, InfiniBand/RoCE, power and cooling | **Silicon Voltages** (MAC operations, memory transactions, signalling, power draw) |
+| Layer | Name | Owns | Data state leaving the layer (down-path) |
+|:---:|---|---|---|
+| **L6** | Application | Client, UX, streaming render | Request payload |
+| **L5** | Orchestration & Gateway | Auth, policy, guardrails, templating, routing, agent loop, tool and context-service calls | Enriched prompt |
+| **L4** | Serving Engine | Admission, queueing, scheduling, continuous batching, KV-cache management, tokenization, sampling | Token-ID batch + KV-cache block table |
+| **L3** | Model Execution Runtime | Executes the model graph: framework runtime, attention and GEMM kernels, collectives | Kernel launch stream |
+| **L2** | Device & Driver | Driver, memory allocator, kernel launch, streams | Device instruction & memory-transaction stream |
+| **L1** | Physical Compute & Interconnect | Accelerators, HBM, NVLink/InfiniBand, power, thermals | Observable as hardware counters |
 
-> **Axis note:** ↓ Latency and computational cost increase toward lower layers. ↑ Semantic abstraction and policy surface increase toward upper layers.
+| Plane | Holds |
+|---|---|
+| **Context Services** | Retrieval/RAG, vector stores, rerankers, tools/MCP, memory, semantic caches, web search. Called by L5; returns retrieved passages. |
+| **Build/Deploy** | Weights, model architecture and configuration, tokenizer and chat template, compiled graph / kernel IR, engine plans. Loaded by L4 and L3. |
+| **Management** | Cluster orchestration, placement, autoscaling, OS and containers, configuration. |
 
 ---
 
-## **3. Repository Structure**
+## 3. Independent Development and Related Work
+
+DAIRM was developed independently by the author. A review of related work after the first public release (as "AOSI", v1.2.1, 9 Nov 2026) found several earlier OSI-inspired layer models for AI, including:
+
+- Shawn Reilly's ["AOSI (AI Open Systems Interconnection) Reference Model"](https://github.com/kahalewai/aosi) (28 Dec 2025), which uses the same name and a seven-layer framing with different layers;
+- Bor-Sung Liang's seven-layer AI compute model, [arXiv:2508.21394](https://arxiv.org/abs/2508.21394) (Aug 2025);
+- F.-J. Rodrigo-Ginés's [OSI-inspired stack for agentic AI](https://doi.org/10.5281/zenodo.17099409) (Sep 2025);
+- Cisco Research's proposed L8/L9 agent layers above OSI, Fleming et al., [arXiv:2511.19699](https://arxiv.org/abs/2511.19699) (Nov 2025);
+- the Cloud Security Alliance's [MAESTRO](https://cloudsecurityalliance.org/blog/2025/02/06/agentic-ai-threat-modeling-framework-maestro) seven-layer threat model for agentic AI (Feb 2025);
+- Logan Smith's [AI Layer Model](https://logansmith.us/post-ai-layer-model.html) (Oct 2026) and Dollhouse Research's [AILIS](https://ailis.dollhouseresearch.com/).
+
+To avoid confusion with Reilly's work, the model was renamed DAIRM in v2.0.0. DAIRM does not claim priority over any of these works. The full comparison is in [DAIRM-TR-0001 §10](docs/DAIRM-TR-0001.md#10-independent-development-and-related-work).
+
+---
+
+## 4. Repository Structure
 
 ```text
-aosi-model/
-├── README.md                     # This landing page
-├── CONTRIBUTING.md               # Community governance, review and amendment process
-├── LICENSE                       # Creative Commons Attribution 4.0 International (CC-BY-4.0)
-├── rfc/
-│   └── RFC-0001-AOSI-Model.md    # AOSI-RFC-0001: the normative specification
-├── assets/
-│   ├── README.md                 # Conventions for diagrams and figures
-│   └── aosi-rfc-0001-overview.png
-└── diagnostics/
-    └── README.md                 # Home for layer-specific runbooks, probes and dashboards
+dairm/
+├── README.md                  # This page
+├── CONTRIBUTING.md            # Review, issues and change-proposal process
+├── LICENSE                    # CC-BY-4.0
+├── CITATION.cff, .zenodo.json # Citation and archive metadata
+├── docs/
+│   └── DAIRM-TR-0001.md       # The technical report (v2.0.0)
+├── assets/                    # Figure sources (Mermaid, SVG generator) and the generated SVG
+├── diagnostics/               # Runbooks, telemetry mappings and dashboards (planned)
+├── paper/                     # arXiv manuscript (LaTeX source, bibliography, PDF)
+└── ietf/                      # Internet-Draft version (draft-bhatt-dairm-00), not submitted
 ```
-
-| Directory | Purpose |
-|---|---|
-| **`/rfc`** | Normative specifications. Each RFC is a single Markdown file named `RFC-NNNN-<Short-Title>.md`. Amendments are proposed per [CONTRIBUTING.md](CONTRIBUTING.md). |
-| **`/assets`** | Diagrams, figures and source files (e.g., Mermaid, SVG, PNG) referenced by RFCs. Every asset must be traceable to the RFC section it illustrates. |
-| **`/diagnostics`** | Practitioner material derived from the Diagnostic & Troubleshooting Matrix (RFC-0001 §7): runbooks, telemetry mappings, OpenTelemetry semantic attribute proposals and sample dashboards. |
-
----
-
-## **4. Quick Links & How to Participate in the RFC**
-
-### **4.1 Quick links**
 
 | Resource | Link |
 |---|---|
-| **Specification** | [AOSI-RFC-0001 — The AOSI Reference Model](rfc/RFC-0001-AOSI-Model.md) |
-| Layer definitions | [RFC-0001 §5 — Layer-by-Layer Specification](rfc/RFC-0001-AOSI-Model.md#5-layer-by-layer-specification) |
-| Request lifecycle | [RFC-0001 §6 — Request Lifecycle Walk-Through](rfc/RFC-0001-AOSI-Model.md#6-request-lifecycle-walk-through) |
-| Diagnostics ("Wireshark for AI") | [RFC-0001 §7 — Diagnostic & Troubleshooting Matrix](rfc/RFC-0001-AOSI-Model.md#7-diagnostic--troubleshooting-matrix) |
-| Security | [RFC-0001 §8 — Security Considerations](rfc/RFC-0001-AOSI-Model.md#8-security-considerations) |
-| Roadmap | [RFC-0001 §9 — Future Roadmap](rfc/RFC-0001-AOSI-Model.md#9-future-roadmap) |
-| Related work | [RFC-0001 §10 — Related Work and Novelty](rfc/RFC-0001-AOSI-Model.md#10-related-work-and-novelty) |
-| Citation metadata | [CITATION.cff](CITATION.cff) · [.zenodo.json](.zenodo.json) |
-| Governance | [CONTRIBUTING.md](CONTRIBUTING.md) |
-| Discussion | [GitHub Issues](https://github.com/CodingThrill0012/aosi-model/issues) |
-
-### **4.2 How to participate**
-
-AOSI-RFC-0001 is in its **public comment period**. Engineers, researchers and MLOps practitioners are invited to:
-
-1. **Review** the specification, focusing on layer boundaries, data-state definitions and the diagnostic matrix.
-2. **Comment** by opening a GitHub Issue using the appropriate type (`review-comment`, `clarification`, `erratum`, `layer-amendment`, `diagnostic-pattern`, `security`, `roadmap`).
-3. **Propose amendments** to a layer's scope, components, interfaces or data states through the Layer Amendment Proposal (LAP) process.
-4. **Debate** architectural questions in the open; decisions are recorded in the issue tracker with rationale.
-
-Full guidelines are in **[CONTRIBUTING.md](CONTRIBUTING.md)**.
+| Technical report | [DAIRM-TR-0001](docs/DAIRM-TR-0001.md) |
+| Boundary data states | [§4.3](docs/DAIRM-TR-0001.md#43-boundary-data-states) |
+| Layer and plane descriptions | [§5](docs/DAIRM-TR-0001.md#5-layer-and-plane-descriptions) |
+| Diagnostic method | [§7](docs/DAIRM-TR-0001.md#7-diagnostic-method) |
+| Security considerations | [§8](docs/DAIRM-TR-0001.md#8-security-considerations) |
+| Telemetry attributes | [Appendix B](docs/DAIRM-TR-0001.md#appendix-b-proposed-telemetry-attributes) |
+| Discussion | [GitHub Issues](https://github.com/CodingThrill0012/dairm/issues) |
 
 ---
 
-## **5. How to Cite**
+## 5. How to Participate
 
-If you use, extend or reference the AOSI Reference Model, please cite it as follows. Machine-readable metadata is in [`CITATION.cff`](CITATION.cff); GitHub's **"Cite this repository"** button uses it.
+DAIRM-TR-0001 is a working draft open for public review. Engineers, researchers and MLOps practitioners are invited to:
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24073122.svg)](https://doi.org/10.5281/zenodo.24073122)
+1. **Review** the boundaries, the data states and the diagnostic method.
+2. **Comment** through a GitHub issue of the right type (`review-comment`, `clarification`, `erratum`, `change-proposal`, `diagnostic-pattern`, `prior-art`, `security`, `governance`).
+3. **Propose changes** to a layer, plane, boundary state or telemetry attribute through a DAIRM Change Proposal (DCP).
+4. **Report prior art** we missed. Corrections to the related-work section are especially welcome.
 
-> **DOI:** v1.2.1 is archived on Zenodo as [10.5281/zenodo.24073122](https://doi.org/10.5281/zenodo.24073122). To cite all versions, use the concept DOI [10.5281/zenodo.24073121](https://doi.org/10.5281/zenodo.24073121).
+Guidelines are in [CONTRIBUTING.md](CONTRIBUTING.md).
+
+---
+
+## 6. How to Cite
+
+Machine-readable metadata is in [`CITATION.cff`](CITATION.cff); GitHub's "Cite this repository" button uses it. The concept DOI [10.5281/zenodo.24073121](https://doi.org/10.5281/zenodo.24073121) covers all versions. Version 2.0.0 receives its own DOI when it is archived; the previous version, AOSI v1.2.1, is [10.5281/zenodo.24073122](https://doi.org/10.5281/zenodo.24073122).
 
 **APA (7th ed.)**
 
 ```text
-Bhatt, D. (2026). AOSI-RFC-0001: The AI Open Systems Interconnection (AOSI) Reference Model:
-A 7-layer stack for generative AI execution (Version 1.2.1, Final Draft for RFC) [Proposed standard,
-draft for public comment]. Zenodo. https://doi.org/10.5281/zenodo.24073122
+Bhatt, D. (2026). DAIRM-TR-0001: DAIRM: Divyendu's Data-State-Aware AI Reference Model for
+Generative AI Inference Systems (Version 2.0.0) [Technical report, working draft]. Zenodo.
+https://doi.org/10.5281/zenodo.24073121
 ```
 
 **BibTeX**
 
 ```bibtex
-@techreport{bhatt2026aosi,
+@techreport{bhatt2026dairm,
   author      = {Bhatt, Divyendu},
-  title       = {{AOSI-RFC-0001}: The {AI} Open Systems Interconnection ({AOSI}) Reference Model: A 7-Layer Stack for Generative {AI} Execution},
-  institution = {AOSI Model Repository},
-  type        = {RFC},
-  number      = {AOSI-RFC-0001},
-  version     = {1.2.1},
+  title       = {{DAIRM}: Divyendu's Data-State-Aware {AI} Reference Model for Generative {AI} Inference Systems},
+  type        = {Technical Report / Working Draft},
+  number      = {DAIRM-TR-0001},
+  institution = {Independent},
+  version     = {2.0.0},
   year        = {2026},
   month       = nov,
-  note        = {Final Draft for RFC. Proposed Standard, Draft for Public Comment. Licensed under CC-BY-4.0},
-  doi         = {10.5281/zenodo.24073122},
-  url         = {https://doi.org/10.5281/zenodo.24073122}
+  doi         = {10.5281/zenodo.24073121},
+  url         = {https://github.com/CodingThrill0012/dairm},
+  note        = {Concept DOI covering all versions. Supersedes AOSI v1.2.1 (doi:10.5281/zenodo.24073122). CC-BY-4.0}
 }
 ```
 
 ---
 
-© Divyendu Bhatt. Licensed under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).
+## 7. AI-Assistance Disclosure
+
+Drafting, editing, formatting and figure preparation were assisted by AI tools. The conceptual model, design decisions and final content are the author's, and the author takes full responsibility for them. The figures are drawn from Mermaid source or generated by the script in `assets/`; none is an AI-generated image.
+
+---
+
+© 2026 Divyendu Bhatt. Licensed under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).

@@ -1,36 +1,40 @@
 {
-  "title": "AOSI-RFC-0001: The AI Open Systems Interconnection (AOSI) Reference Model: A 7-Layer Stack for Generative AI Execution",
-  "version": "1.2.1",
+  "title": "DAIRM: Divyendu's Data-State-Aware AI Reference Model for Generative AI Inference Systems",
+  "version": "2.0.0",
   "upload_type": "publication",
   "publication_type": "technicalnote",
-  "publication_date": "2026-11-09",
   "creators": [
     {
-      "name": "Bhatt, Divyendu"
+      "name": "Bhatt, Divyendu",
+      "affiliation": "Independent researcher"
     }
   ],
-  "description": "<p>AOSI-RFC-0001 specifies the <strong>AI Open Systems Interconnection (AOSI) Reference Model</strong>, a seven-layer conceptual stack for generative AI execution: L1 Physical Infrastructure, L2 Framework &amp; Runtime, L3 Model &amp; Weight Architecture, L4 Inference &amp; Serving, L5 Retrieval &amp; Knowledge (RAG), L6 Orchestration &amp; Gateway and L7 Application.</p><p>For each layer it defines scope, components, the data-state transformation performed (JSON Payload &rarr; Enriched Prompt &rarr; Vector Chunks &rarr; Batched Tensors &rarr; Hidden States &rarr; Tensor IR &rarr; Silicon Voltages), interfaces, observability signals and failure modes, together with a layer-isolation Diagnostic &amp; Troubleshooting Matrix, per-layer security considerations and a roadmap for Layer 8 (Agentic Workflows), Layer 9 (Distributed Inference / Federated Learning) and cross-layer Global Optimization.</p><p>Version 1.2.1 is a Final Draft for RFC, released as a Proposed Standard for public comment. Author and Conceptual Architect: Divyendu Bhatt.</p>",
+  "description": "<p><strong>DAIRM-TR-0001</strong> (Technical Report / Working Draft, version 2.0.0) describes <strong>DAIRM, Divyendu's Data-State-Aware AI Reference Model</strong>, an informative reference model for the request path of generative AI inference serving.</p><p>It defines a six-layer request path (L6 Application, L5 Orchestration &amp; Gateway, L4 Serving Engine, L3 Model Execution Runtime, L2 Device &amp; Driver, L1 Physical Compute &amp; Interconnect) with Context Services, Build/Deploy and Management planes; a named, observable data state at every boundary (request payload, retrieved passages, enriched prompt, token-ID batch and KV-cache block table, kernel launch stream, device instruction and memory-transaction stream, token stream); a boundary-attributed latency diagnostic method that separates context-service delay, serving-engine queueing/KV-cache pressure and memory-bandwidth-bound decode; and a layer-indexed telemetry attribute set (dairm.*).</p><p>DAIRM does not claim the layered-stack idea or the OSI analogy as novel; earlier OSI-inspired AI models, including S. Reilly's AOSI reference model (2025), are credited in the report.</p><p><strong>This version supersedes AOSI v1.2.1</strong> (doi:10.5281/zenodo.24073122). The model was renamed DAIRM to avoid confusion with Reilly's earlier AOSI model and restructured after independent review; an unsupported earlier drafting date that appeared in v1.2.1 was removed, and the AI-generated overview image was replaced by source-drawn diagrams. Drafting, editing, formatting and figure preparation were assisted by AI tools; the conceptual model, design decisions and final content are the author's.</p><p>Not an IETF RFC and not a standard. Author: Divyendu Bhatt.</p>",
   "access_right": "open",
   "license": "cc-by-4.0",
   "keywords": [
-    "AOSI",
+    "DAIRM",
     "reference model",
     "generative AI",
-    "large language models",
-    "AI architecture",
-    "AI infrastructure",
     "LLM inference",
-    "retrieval-augmented generation",
+    "inference serving",
     "observability",
+    "OpenTelemetry",
+    "KV cache",
+    "retrieval-augmented generation",
     "AI security",
-    "OSI model",
-    "RFC"
+    "technical report"
   ],
   "related_identifiers": [
     {
-      "identifier": "https://github.com/CodingThrill0012/aosi-model",
+      "identifier": "https://github.com/CodingThrill0012/dairm",
       "relation": "isSupplementTo",
       "scheme": "url"
+    },
+    {
+      "identifier": "10.5281/zenodo.24073122",
+      "relation": "isNewVersionOf",
+      "scheme": "doi"
     }
   ],
   "language": "eng"

@@ -1,64 +1,70 @@
 cff-version: 1.2.0
-message: "If you use or reference the AOSI Reference Model, please cite it using the metadata below."
+message: "If you use or reference DAIRM, please cite it using the metadata below."
 type: software
-title: "AOSI-RFC-0001: The AI Open Systems Interconnection (AOSI) Reference Model: A 7-Layer Stack for Generative AI Execution"
-version: "1.2.1"
-date-released: "2026-11-09"
-doi: "10.5281/zenodo.24073122"
+title: "DAIRM: Divyendu's Data-State-Aware AI Reference Model for Generative AI Inference Systems"
+version: "2.0.0"
+doi: "10.5281/zenodo.24073121"
 identifiers:
   - type: doi
     value: "10.5281/zenodo.24073121"
     description: "Concept DOI (all versions)"
   - type: doi
     value: "10.5281/zenodo.24073122"
-    description: "Version 1.2.1"
+    description: "Previous version: AOSI v1.2.1 (superseded by DAIRM v2.0.0)"
 license: CC-BY-4.0
 authors:
   - family-names: Bhatt
     given-names: Divyendu
     alias: CodingThrill0012
+    email: Divyendu.bhatt@gmail.com
+    affiliation: "Independent researcher"
     website: "https://github.com/CodingThrill0012"
-repository-code: "https://github.com/CodingThrill0012/aosi-model"
-url: "https://github.com/CodingThrill0012/aosi-model"
+repository-code: "https://github.com/CodingThrill0012/dairm"
+url: "https://github.com/CodingThrill0012/dairm"
 abstract: >-
-  AOSI-RFC-0001 specifies the AI Open Systems Interconnection (AOSI) Reference
-  Model, a seven-layer conceptual stack for generative AI execution: L1 Physical
-  Infrastructure, L2 Framework & Runtime, L3 Model & Weight Architecture,
-  L4 Inference & Serving, L5 Retrieval & Knowledge (RAG), L6 Orchestration &
-  Gateway and L7 Application. For each layer it defines scope, components, the
-  data-state transformation performed (JSON Payload, Enriched Prompt, Vector
-  Chunks, Batched Tensors, Hidden States, Tensor IR, Silicon Voltages),
-  interfaces, observability signals and failure modes, together with a
-  layer-isolation Diagnostic & Troubleshooting Matrix, per-layer security
-  considerations and a roadmap for Layer 8 (Agentic Workflows), Layer 9
-  (Distributed Inference / Federated Learning) and cross-layer Global
-  Optimization. Version 1.2.1 is a Final Draft for RFC, released for public comment.
+  DAIRM-TR-0001 (Technical Report / Working Draft, version 2.0.0) describes
+  DAIRM, Divyendu's Data-State-Aware AI Reference Model, an informative
+  reference model for the request path of generative AI inference serving.
+  It defines a six-layer request path (L6 Application, L5 Orchestration &
+  Gateway, L4 Serving Engine, L3 Model Execution Runtime, L2 Device & Driver,
+  L1 Physical Compute & Interconnect) with Context Services, Build/Deploy and
+  Management planes; a named, observable data state at every boundary
+  (request payload, retrieved passages, enriched prompt, token-ID batch and
+  KV-cache block table, kernel launch stream, device instruction and
+  memory-transaction stream, token stream); a boundary-attributed latency
+  diagnostic method; and a layer-indexed telemetry attribute set (dairm.*).
+  DAIRM does not claim the layered-stack idea or the OSI analogy as novel and
+  credits earlier OSI-inspired AI models. Version 2.0.0 supersedes AOSI v1.2.1:
+  the model was renamed and restructured after independent review, and an
+  unsupported earlier drafting date was removed. Not an IETF RFC and not a
+  standard.
 keywords:
-  - AOSI
+  - DAIRM
   - reference model
   - generative AI
-  - large language models
-  - AI architecture
-  - AI infrastructure
   - LLM inference
-  - retrieval-augmented generation
+  - inference serving
   - observability
+  - OpenTelemetry
+  - KV cache
+  - retrieval-augmented generation
   - AI security
-  - OSI model
-  - RFC
+  - technical report
 preferred-citation:
-  type: standard
-  title: "AOSI-RFC-0001: The AI Open Systems Interconnection (AOSI) Reference Model: A 7-Layer Stack for Generative AI Execution"
-  version: "1.2.1"
+  type: report
+  title: "DAIRM-TR-0001: DAIRM: Divyendu's Data-State-Aware AI Reference Model for Generative AI Inference Systems"
+  version: "2.0.0"
   year: 2026
   month: 11
-  date-released: "2026-11-09"
   status: preprint
+  doi: "10.5281/zenodo.24073121"
   authors:
     - family-names: Bhatt
       given-names: Divyendu
+      email: Divyendu.bhatt@gmail.com
+      affiliation: "Independent researcher"
       website: "https://github.com/CodingThrill0012"
-  url: "https://github.com/CodingThrill0012/aosi-model"
-  repository-code: "https://github.com/CodingThrill0012/aosi-model"
+  url: "https://github.com/CodingThrill0012/dairm"
+  repository-code: "https://github.com/CodingThrill0012/dairm"
   license: CC-BY-4.0
-  notes: "Final Draft for RFC. Proposed Standard | Draft for Public Comment."
+  notes: "Technical Report / Working Draft. Supersedes AOSI v1.2.1 (doi:10.5281/zenodo.24073122)."
