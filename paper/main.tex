@@ -19,29 +19,28 @@
 \usepackage[hidelinks]{hyperref}
 \usepackage{url}
 
-\newcommand{\aosi}{AOSI}
-\newcommand{\Lay}[1]{L#1}
 % Coverage marks for the comparison table
 \DeclareRobustCommand{\full}{\tikz[baseline=-0.6ex]\fill (0,0) circle (2.3pt);}
 \DeclareRobustCommand{\half}{\tikz[baseline=-0.6ex]{\draw (0,0) circle (2.3pt);\fill (0,0) -- (90:2.3pt) arc (90:270:2.3pt) -- cycle;}}
 \DeclareRobustCommand{\none}{\tikz[baseline=-0.6ex]\draw (0,0) circle (2.3pt);}
 \newcolumntype{Y}{>{\raggedright\arraybackslash}X}
-\newcolumntype{C}{>{\centering\arraybackslash}p{0.95cm}}
+\newcolumntype{C}{>{\centering\arraybackslash}p{0.8cm}}
 
 \setlength{\textfloatsep}{10pt plus 2pt minus 2pt}
 \setlength{\floatsep}{8pt plus 2pt minus 2pt}
 \setlength{\intextsep}{8pt plus 2pt minus 2pt}
-\definecolor{l7}{HTML}{3B4A6B}
-\definecolor{l6}{HTML}{2F6DB5}
-\definecolor{l5}{HTML}{2E9C8F}
+\definecolor{l6}{HTML}{3B4A6B}
+\definecolor{l5}{HTML}{2F6DB5}
 \definecolor{l4}{HTML}{4E9F3D}
-\definecolor{l3}{HTML}{E0A126}
+\definecolor{l3}{HTML}{C98A14}
 \definecolor{l2}{HTML}{D9692B}
 \definecolor{l1}{HTML}{C0392B}
+\definecolor{ctx}{HTML}{2E9C8F}
+\definecolor{bld}{HTML}{7A5BA6}
+\definecolor{mgmt}{HTML}{6B7785}
 
-\title{The AI Open Systems Interconnection (AOSI) Reference Model:\\
-A Seven-Layer Vocabulary for Locating Performance, Correctness\\
-and Security Concerns in Generative AI Inference}
+\title{DAIRM: Divyendu's Data-State-Aware AI Reference Model\\
+for Generative AI Inference Systems}
 \author{Divyendu Bhatt\\
 \small Independent Researcher\\
 \small \texttt{Divyendu.bhatt@gmail.com}}
@@ -51,287 +50,337 @@ and Security Concerns in Generative AI Inference}
 \maketitle
 
 \begin{abstract}
-A single generative AI request crosses a client application, an orchestration gateway, a retrieval pipeline, an inference-serving engine, a transformer model, a compiler and runtime stack, and accelerator hardware. Each tier has its own tools, telemetry and vocabulary, and practitioners lack a shared frame for stating \emph{where} in this path a latency regression, a quality failure or a security threat originates. Standards, risk frameworks, industry stack diagrams, serving surveys and threat catalogues each cover part of this problem, and existing OSI-inspired AI models target agent cognition or multi-agent interoperability rather than the execution path of one request. This paper presents AOSI, an informative seven-layer reference model for generative AI inference that (i) orders the tiers from physical infrastructure (L1) to application (L7), (ii) names a canonical data state at every layer boundary, from JSON payload to silicon voltages, (iii) derives a layer-isolation method for diagnosing latency and failures, and (iv) maps the OWASP Top 10 for LLM Applications onto the layers at which each risk materialises. We position AOSI against eleven groups of related work in a structured comparison, illustrate its use on a worked (non-empirical) triage example, and state its limitations: it has not been empirically validated or adopted by any standards body. We close with a concrete evaluation plan.
+A generative AI request crosses a client application, an orchestration gateway, context services such as retrieval and tools, an inference-serving engine, a model-execution runtime, device drivers and accelerator hardware. Each tier has its own tools, telemetry and vocabulary, and practitioners lack a shared way to state \emph{where} on this path a latency regression, a quality failure or a security threat originates. Several OSI-inspired layer models for AI already exist; this paper does not claim the layered-stack idea or the OSI analogy as new. It presents DAIRM, an informative reference model for the \emph{request path of generative AI inference serving}, with a six-layer request path (application, orchestration and gateway, serving engine, model-execution runtime, device and driver, physical compute and interconnect) and three planes beside it (context services, build/deploy and management). Its contributions are limited to three items: (i) a named, observable data state at every boundary of the request path, from the request payload to the device instruction and memory-transaction stream and back as a token stream; (ii) a boundary-attributed latency diagnostic method that separates context-service delay, serving-engine queueing or KV-cache pressure, and memory-bandwidth-bound decode; and (iii) a layer-indexed telemetry attribute set that makes the method executable on OpenTelemetry traces. We compare DAIRM with related standards, frameworks and layer models, including an earlier, unrelated model that shares this work's former name, illustrate the method on a constructed (non-empirical) example, and state its limitations: it has not been validated empirically or adopted by any standards body. We close with an evaluation plan.
 \end{abstract}
 
-\noindent\textbf{Keywords:} reference model, generative AI, LLM inference serving, observability, AI security, layered architecture
+\noindent\textbf{Keywords:} reference model, generative AI, LLM inference serving, observability, OpenTelemetry, KV cache, layered architecture
 
 \section{Introduction}
 \label{sec:intro}
 
-Production generative AI is no longer a model behind an API. Serving a single chat completion with retrieval-augmented generation (RAG)~\cite{lewis2020rag} involves an application client, an API or AI gateway that applies policy and templates, an embedding model and vector index, a serving engine that batches requests and manages a key--value (KV) cache~\cite{yu2022orca,kwon2023paged}, the transformer itself, a framework and compiler stack that lowers the model to kernels~\cite{dao2022flash}, and accelerators whose memory bandwidth often bounds decode speed~\cite{williams2009roofline,yuan2024roofline}. These tiers are usually owned by different teams, observed with different tools, and described with different words.
+Production generative AI is no longer a model behind an API. Serving a chat completion with retrieval-augmented generation (RAG)~\cite{lewis2020rag} involves an application client, an API or AI gateway that applies policy and templates, a retrieval service with an embedding model and vector index, a serving engine that batches requests and manages a key--value (KV) cache~\cite{yu2022orca,kwon2023paged}, a runtime that executes the model graph as kernels~\cite{dao2022flash}, a device driver, and accelerators whose memory bandwidth often bounds decode speed~\cite{williams2009roofline,yuan2024roofline}. These tiers are usually owned by different teams, observed with different tools, and described with different words.
 
-The consequence is a recurring practical problem: \emph{there is no shared vocabulary for locating a failure or threat along the generative AI execution path}. A report that ``the model is slow'' may mean retrieval latency, queueing in the serving engine, KV-cache preemption, or memory-bandwidth saturation on the device; ``the model hallucinated'' may mean a retrieval miss, a stale index, a prompt-template defect, or a quantisation regression. Security controls are often specified as generic ``AI controls'' without stating the tier at which the threat materialises. Sculley et al.\ observed that ML systems erode abstraction boundaries and accumulate system-level debt~\cite{sculley2015debt}; generative inference stacks inherit that problem with more tiers.
+The result is a recurring practical problem: \emph{there is no shared vocabulary for locating a failure or threat along the inference request path}. A report that ``the model is slow'' may mean retrieval latency, queueing in the serving engine, KV-cache preemption, or memory-bandwidth-bound decode; ``the model hallucinated'' may mean a retrieval miss, a stale index, a prompt-template defect, or a quantisation regression. Sculley et al.\ observed that ML systems erode abstraction boundaries and accumulate system-level debt~\cite{sculley2015debt}; generative inference stacks inherit that problem with more tiers.
 
-Computer networking faced an analogous problem and addressed it with the OSI Basic Reference Model~\cite{iso7498,itux200,zimmermann1980osi}: a fixed set of layers, service boundaries between adjacent layers, and named data units at each boundary. OSI's lasting value has arguably been less its protocols than its vocabulary: engineers can say ``this is a layer-2 problem'' and be understood.
-
-This paper applies the same \emph{method}---not the OSI layers themselves---to generative AI inference. We are not the first to draw an OSI analogy for AI (Section~\ref{sec:related}); our contribution is narrower and, we argue, complementary. Specifically:
+Computer networking addressed an analogous problem with the OSI Basic Reference Model~\cite{iso7498,itux200,zimmermann1980osi}: ordered layers, service boundaries between adjacent layers, and named data units at each boundary. This paper borrows that \emph{method}---not the OSI layers---for generative AI inference. Many authors have drawn an OSI analogy for AI before (Section~\ref{sec:related}), including a model published under the name ``AOSI''~\cite{reilly2025aosi}; the present work was first released under that same name, developed independently, and renamed DAIRM to avoid confusion (Section~\ref{sec:indep}). We therefore make no claim about the layered-stack idea, the number of layers or the OSI analogy. Our contributions are limited to:
 
 \begin{enumerate}[leftmargin=*,itemsep=2pt]
-  \item \textbf{A full-depth, ordered layer model of single-request generative inference} (Section~\ref{sec:model}), spanning application (L7), orchestration and gateway (L6), retrieval and knowledge (L5), inference and serving (L4), model and weight architecture (L3), framework and runtime (L2), and physical infrastructure (L1), with explicit scope boundaries and design principles.
-  \item \textbf{A named data state at every boundary}: JSON payload $\rightarrow$ enriched prompt $\rightarrow$ vector chunks $\rightarrow$ batched tensors $\rightarrow$ hidden states $\rightarrow$ tensor IR $\rightarrow$ silicon voltages, playing the role of OSI protocol data units.
-  \item \textbf{A layer-isolation diagnostic method} (Section~\ref{sec:diag}) that combines a latency decomposition, per-layer trace attribution and single-variable isolation tests, including discriminators for three commonly confused causes (L5 retrieval lag, L4 KV-cache pressure, L1 memory-bandwidth saturation).
-  \item \textbf{A layer-indexed security mapping} (Section~\ref{sec:security}) that places each OWASP Top 10 for LLM Applications (2025) risk~\cite{owasp2025llm} at the layer(s) where it materialises.
-  \item \textbf{A structured comparison} (Section~\ref{sec:related}, Table~\ref{tab:compare}) with eleven groups of related standards, frameworks and layer models, and an \textbf{evaluation plan} (Section~\ref{sec:discussion}) for testing the model's claims.
+  \item \textbf{A named, observable data state at every boundary of the inference request path} (Section~\ref{sec:states}). Each state exists per request and can be captured or measured, which makes each boundary a checkpoint for attributing cause. Activations and the KV cache are treated as resident device-memory state, and weights, tokenizers and compiled graphs as build/deploy artifacts, rather than as data handed between layers.
+  \item \textbf{A boundary-attributed latency diagnostic method} (Section~\ref{sec:diag}) combining a latency decomposition, per-layer trace attribution and single-variable isolation tests, with discriminators for three commonly confused causes: context-service delay, serving-engine queueing or KV-cache pressure, and memory-bandwidth-bound decode.
+  \item \textbf{A layer-indexed telemetry attribute set} (\texttt{dairm.*}, Section~\ref{sec:telemetry}) that makes the method executable on OpenTelemetry traces alongside the OpenTelemetry generative AI semantic conventions~\cite{otelgenai}.
 \end{enumerate}
 
-AOSI is a conceptual, informative model. It defines no protocol, it has not been empirically validated, and it has not been adopted by any standards development organisation. A full specification, including per-layer interfaces, metrics, failure modes and proposed telemetry attributes, is archived as a versioned technical report~\cite{bhatt2026zenodo}; an IETF Internet-Draft version has been prepared for submission to the Independent Submission stream.
+\noindent We also give a structured comparison with related work (Table~\ref{tab:compare}), a layer-indexed mapping of the OWASP Top 10 for LLM Applications (offered as content, not as a novelty claim, since per-layer threat mapping exists~\cite{huang2025maestro}), and an evaluation plan. DAIRM defines no protocol, has not been validated empirically, and has not been adopted by any standards development organisation. A fuller specification is maintained as a versioned technical report~\cite{bhatt2026dairm}.
 
 \section{Background: Why Layered Reference Models Work}
 \label{sec:background}
 
-Layering as a structuring discipline predates networking. Dijkstra's THE system organised an operating system into levels, each relying only on services of the levels below~\cite{dijkstra1968the}, and Parnas argued that modules should be chosen to hide design decisions likely to change~\cite{parnas1972criteria}. The OSI model turned these ideas into a \emph{reference} model for an industry~\cite{zimmermann1980osi,iso7498}. Three properties are relevant here.
+Layering as a structuring discipline predates networking. Dijkstra's THE system organised an operating system into levels, each relying only on services of the levels below~\cite{dijkstra1968the}, and Parnas argued that modules should hide design decisions likely to change~\cite{parnas1972criteria}. The OSI model turned these ideas into a \emph{reference} model for an industry~\cite{zimmermann1980osi,iso7498}. Three properties matter here.
 
-\paragraph{Separation of concerns with stable boundaries.} Each OSI layer provides a service to the layer above through a defined boundary. Implementations of one layer can change without changing its neighbours, provided the service is preserved.
+\paragraph{Separation of concerns with stable boundaries.} Each OSI layer provides a service to the layer above through a defined boundary, so implementations of one layer can change without changing their neighbours.
 
-\paragraph{Named data units.} OSI names what crosses each boundary (frames, packets, segments, and so on). A named unit can be captured, decoded and measured, which is what makes tools such as protocol analysers effective: an engineer can inspect the unit at a boundary and assert which layer misbehaved.
+\paragraph{Named data units.} OSI names what crosses each boundary. A named unit can be captured, decoded and measured, which is what makes protocol analysers effective: an engineer can inspect the unit at a boundary and assert which layer misbehaved.
 
-\paragraph{Reference, not implementation.} ISO/IEC 7498-1 explicitly positions the model as a framework for coordinating standards, not an implementation specification~\cite{iso7498}. The Internet's own protocols do not map one-to-one onto OSI layers, yet the vocabulary remained useful. The end-to-end argument~\cite{saltzer1984e2e} adds a caution that transfers directly to AI: some functions (e.g., correctness of the final answer) can only be fully implemented with knowledge held at the endpoints, so a layer model must not pretend that every concern is local to one layer.
+\paragraph{Reference, not implementation.} ISO describes ISO/IEC 7498-1 as a framework for coordinating standards that is not intended as an implementation specification~\cite{iso7498}. The Internet's protocols do not map one-to-one onto OSI layers, yet the vocabulary stayed useful. The end-to-end argument~\cite{saltzer1984e2e} adds a caution that transfers directly to AI: some functions (e.g., correctness of the final answer) can only be implemented with knowledge held at the endpoints, so a layer model must not pretend that every concern is local to one layer.
 
-Distributed tracing supplies the other ingredient AOSI relies on. Dapper showed that propagating a trace context across service boundaries makes latency in large distributed systems attributable to individual components~\cite{sigelman2010dapper}; W3C Trace Context and the OpenTelemetry generative AI semantic conventions standardise parts of this for modern stacks~\cite{w3ctracecontext,otelgenai}. AOSI's diagnostic method (Section~\ref{sec:diag}) is essentially a proposal for \emph{which} boundaries such traces should mark in a generative AI system.
+Distributed tracing supplies the other ingredient. Dapper showed that propagating a trace context across service boundaries makes latency in large distributed systems attributable to individual components~\cite{sigelman2010dapper}; W3C Trace Context and the OpenTelemetry generative AI semantic conventions standardise parts of this for modern stacks~\cite{w3ctracecontext,otelgenai}. DAIRM's diagnostic method is essentially a proposal for \emph{which} boundaries such traces should mark in a generative AI system, and what state to record there.
 
-\section{Related Work}
+\section{Related Work and Independent Development}
 \label{sec:related}
 
-We group related work into five families and summarise the comparison in Table~\ref{tab:compare}. The assessments are the author's reading of each work's public text or official description; ISO/IEC standards were assessed from their published scope statements, since full texts are not freely available. Corrections are welcome.
+We group related work into six families and summarise the comparison in Table~\ref{tab:compare}. The assessments are the author's reading of each work's public text or official description; ISO/IEC standards were assessed from their published scope statements, since full texts are not freely available. Corrections are welcome.
 
-\paragraph{International standards and risk frameworks.} ISO/IEC 22989 establishes AI concepts and terminology~\cite{iso22989}. ISO/IEC 23053 provides a technology-neutral framework describing the components and functions of AI systems that use machine learning~\cite{iso23053}. Both are normative and broad: they define \emph{what} an AI system consists of, across the ML lifecycle, rather than how one inference request traverses a serving stack. The NIST AI Risk Management Framework~\cite{nist2023airmf} and its Generative AI Profile~\cite{nist2024genai} define organisational risk-management functions (Govern, Map, Measure, Manage) and generative-AI-specific risks and actions; they are process frameworks rather than technical layer models. AOSI is intended to sit beneath these: it offers a technical location (e.g., ``L5'') at which a ``Measure'' or ``Manage'' activity can be scoped, and it defers to ISO/IEC 22989 for general AI terms.
+\subsection{Independent development}
+\label{sec:indep}
+DAIRM was developed independently by the author. A review of related work after its first public release (as ``AOSI'', v1.2.1, 9 November 2026) identified several earlier OSI-inspired layer models for AI: Reilly's ``AOSI (AI Open Systems Interconnection) Reference Model'' (GitHub, 28 December 2025), which uses the same name and a seven-layer framing with different layers~\cite{reilly2025aosi}; Liang's seven-layer AI compute model from hardware to application (August 2025)~\cite{liang2025compute}; Rodrigo-Gin\'es's OSI-inspired stack for agentic AI (September 2025)~\cite{rodrigogines2025osi}; Cisco Research's proposed agent layers L8/L9 above OSI (November 2025)~\cite{fleming2025ioa}; and the Cloud Security Alliance's MAESTRO, a seven-layer threat model for agentic AI (February 2025)~\cite{huang2025maestro}. To avoid confusion with Reilly's work, the model was renamed DAIRM in version 2.0.0. DAIRM does not claim the layered-stack idea or the OSI analogy as novel and does not claim priority over any of these works; its contributions are the three items listed in Section~\ref{sec:intro}.
 
-\paragraph{Industry stack diagrams and MLOps architectures.} The a16z reference architecture for LLM applications~\cite{a16z2023llm} describes data pipelines, embedding models, vector databases, orchestration, APIs and plugins, LLM caches, logging and validation, and app hosting. It is widely referenced and covers roughly AOSI L5--L7, but it treats the model as a hosted API and does not decompose serving, model, framework or hardware tiers. MLOps references---Google Cloud's continuous-delivery architecture~\cite{googlemlops} and Kreuzberger et al.'s literature- and interview-based definition of MLOps components, roles and workflows~\cite{kreuzberger2022mlops}---are organised around the ML \emph{lifecycle} (training, validation, deployment, monitoring). They include model serving and monitoring components but not the internal layering of a generative inference request. AOSI excludes training (Section~\ref{sec:scope}), which is precisely where lifecycle models apply.
+\subsection{Families of related work}
 
-\paragraph{Software-architecture research on foundation-model systems.} Lu et al.\ propose a taxonomy of foundation-model-based systems~\cite{lu2023taxonomy}, a pattern-oriented reference architecture for responsible FM-based systems organised into system, operation and supply-chain layers~\cite{lu2023rafm}, and a reference architecture for FM-based agents~\cite{lu2024agents}. These works treat RAG, guardrails and responsible-AI controls as architectural elements and evaluate completeness by mapping to real systems. Their unit of analysis is the software architecture and its design decisions; AOSI's unit is the execution path of a request down to hardware, with named boundary states. The two are complementary: a Lu et al.\ guardrail pattern would be located at AOSI L6, a RAG pattern at L5.
+\paragraph{OSI-inspired and layered AI models.} Reilly's AOSI has seven layers (infrastructure, model, data, orchestration, communication, interface, application) and states what each layer provides to the layer above, but defines no per-request boundary data state or diagnostic method~\cite{reilly2025aosi}. Liang's model spans the same hardware-to-application range with different cuts (physical, link, neural network, context, agent, orchestrator, application) and discusses KV caches and prefill/decode disaggregation within its layers~\cite{liang2025compute}. Chander's seven-layer map places RAG inside orchestration and argues that training and serving need separate views~\cite{chander2026map}; DAIRM adopts both points through its context-services and build/deploy planes. Logan Smith's AI Layer Model groups nine layers into substrate, cognition and systems planes to place components and identify controls~\cite{smith2026ailayer}, and Dollhouse Research's AILIS proposes a finer 16+ layer vocabulary from facilities to application~\cite{ailis}. Localis uses ``AI OSI Model'' for a seven-layer technology taxonomy~\cite{localis}, and \{a\}OS describes seven agent-centric strata including a separate knowledge and memory stratum~\cite{aos7}. Rodrigo-Gin\'es layers interoperability between agents~\cite{rodrigogines2025osi}, the ACE framework layers an agent's cognition~\cite{shapiro2023ace}, and Fleming et al.\ propose agent communication and agent semantic layers (L8, L9) above the OSI application layer~\cite{fleming2025ioa}; an earlier version of this work had reserved its own ``L8/L9'', which was removed to avoid that collision. None of these models defines a named, per-request data state at every boundary of the inference path or a latency-attribution method built on such states.
 
-\paragraph{Serving-systems research and surveys.} Systems work such as Orca's iteration-level scheduling~\cite{yu2022orca}, PagedAttention~\cite{kwon2023paged}, chunked prefill~\cite{agrawal2023sarathi} and prefill/decode disaggregation~\cite{zhong2024distserve} shows that the serving tier has its own bottlenecks, distinct from model architecture and hardware. Surveys organise this space: Miao et al.\ span algorithmic and system techniques~\cite{miao2023serving}; Li et al.\ group recent advances into KV-cache and memory management, computation optimisation, cloud deployment and emerging areas including RAG and mixture-of-experts~\cite{li2024servingsurvey}; Pan and Li structure inference systems from request-processing operators to memory management and multi-replica designs~\cite{pan2025inference}; Yuan et al.\ use the roofline model~\cite{williams2009roofline} to explain why decoding is often memory-bound~\cite{yuan2024roofline}. MLPerf Inference provides system-level benchmarks~\cite{reddi2019mlperf}. These works are taxonomies of \emph{optimisation techniques} or measurements, not reference models with layer boundaries and boundary states; AOSI draws on them as evidence that L4, L3, L2 and L1 deserve separate layers.
+\paragraph{Software-architecture research on LLM and foundation-model systems.} Lu et al.\ propose a taxonomy of foundation-model-based systems~\cite{lu2023taxonomy} and reference architectures for responsible FM-based systems~\cite{lu2023rafm} and agents~\cite{lu2024agents}. Bucaioni et al.\ give a functional reference architecture for LLM-integrated systems and validate it against open-source systems~\cite{bucaioni2025fra}, a level of validation DAIRM has yet to reach. Lin et al.\ propose a layered, model-native computing architecture with interface contracts between layers~\cite{lin2026ica}, close in spirit to named boundaries but at agent and operating-system level. These works analyse design decisions and components; DAIRM's unit of analysis is one request's execution path down to the device.
 
-\paragraph{OSI-inspired AI layer models.} At least two prior works use the OSI analogy explicitly. The ACE framework of Shapiro et al.\ is a six-layer cognitive architecture for autonomous agents, from an Aspirational Layer to Task Prosecution, explicitly inspired by OSI~\cite{shapiro2023ace}. Rodrigo-Gin\'es proposes a seven-level OSI-inspired interoperability stack for agentic AI, from physical infrastructure and runtime execution to agent-to-agent communication, coordination workflows, and governance and trust~\cite{rodrigogines2025osi}. ACE layers an agent's reasoning and control; Rodrigo-Gin\'es layers interoperability between agents. Neither decomposes the inference path within a single request or defines boundary data states for it. AOSI's reserved Layer~8 (agentic workflows; Section~\ref{sec:discussion}) is where these models would connect.
+\paragraph{International standards and risk frameworks.} ISO/IEC 22989 establishes AI concepts and terminology~\cite{iso22989}, and ISO/IEC 23053 describes the components and functions of ML-based AI systems~\cite{iso23053}. The NIST AI RMF~\cite{nist2023airmf} and its Generative AI Profile~\cite{nist2024genai} define organisational risk-management functions. These are broad or process-oriented; DAIRM can supply a technical location at which a ``Measure'' or ``Manage'' activity is scoped, and defers to ISO/IEC 22989 for general AI terms.
 
-\paragraph{AI security catalogues.} The OWASP Top 10 for LLM Applications (2025)~\cite{owasp2025llm} ranks risk categories; MITRE ATLAS catalogues adversary tactics and techniques against AI-enabled systems~\cite{mitreatlas}; NIST AI 100-2 E2025 provides a taxonomy and terminology of adversarial ML attacks and mitigations~\cite{nist2025aml}; Google's SAIF frames security practices for AI systems~\cite{googlesaif}. These describe \emph{what} can go wrong and what to do; none of them is organised by the execution layer at which a threat materialises. Section~\ref{sec:security} uses AOSI as such an index.
+\paragraph{Industry stacks and MLOps.} The a16z reference architecture for LLM applications~\cite{a16z2023llm} covers the application tier and treats the model as a hosted API. MLOps references~\cite{googlemlops,kreuzberger2022mlops} are organised around the ML lifecycle; in DAIRM terms they sit upstream of the build/deploy plane.
+
+\paragraph{Serving-systems research.} Iteration-level scheduling~\cite{yu2022orca}, PagedAttention~\cite{kwon2023paged}, chunked prefill~\cite{agrawal2023sarathi} and prefill/decode disaggregation~\cite{zhong2024distserve} show that the serving tier has its own bottlenecks. Surveys organise this space~\cite{miao2023serving,li2024servingsurvey,pan2025inference}, roofline analysis explains why decode is often memory-bound~\cite{yuan2024roofline}, and MLPerf Inference provides system benchmarks~\cite{reddi2019mlperf}. These are taxonomies of optimisation techniques or measurements; DAIRM draws on them as evidence that the serving engine, runtime and hardware deserve separate layers.
+
+\paragraph{AI security catalogues.} The OWASP Top 10 for LLM Applications~\cite{owasp2025llm}, MITRE ATLAS~\cite{mitreatlas}, NIST AI 100-2~\cite{nist2025aml} and Google's SAIF~\cite{googlesaif} describe what can go wrong and what to do. MAESTRO already maps threats by layer for agentic systems~\cite{huang2025maestro}; DAIRM's mapping (Section~\ref{sec:security}) is offered as content for the inference path, not as a novelty claim.
 
 \begin{table}[!htbp]
 \centering
-\caption{Comparison of AOSI with related standards, frameworks and layer models. \full~= explicit, distinct element; \half~= discussed but not as a distinct layer or boundary; \none~= not a focus. ``States'' = a named data representation at each inter-layer boundary. ``Diag.'' = a method for attributing latency or failures to a tier; ``Sec.'' = security threats or controls addressed (layer-indexed only in AOSI); ``HW'' = hardware layer; ``Serve'' = inference-serving layer. Assessments reflect the author's reading of public descriptions (Section~\ref{sec:related}).}
+\caption{Comparison of DAIRM with related work. \full~= explicit, distinct element; \half~= discussed, but not as a distinct layer, plane or boundary; \none~= not a focus. ``HW'' = hardware layer; ``Serve'' = inference-serving layer; ``Ctx'' = retrieval or context services; ``States'' = a named, per-request data representation at each boundary; ``Diag.'' = a method for attributing latency or failures to a tier; ``Sec.'' = security threats or controls. Assessments are the author's reading of public descriptions (Section~\ref{sec:related}).}
 \label{tab:compare}
 \footnotesize
 \setlength{\tabcolsep}{2pt}
-\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.75cm}YCCCCCC>{\raggedright\arraybackslash}p{1.95cm}@{}}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.7cm}YCCCCCC>{\raggedright\arraybackslash}p{2.0cm}@{}}
 \toprule
-\textbf{Work} & \textbf{Primary scope} & \textbf{HW} & \textbf{Serve} & \textbf{RAG} & \textbf{States} & \textbf{Diag.} & \textbf{Sec.} & \textbf{Nature}\\
+\textbf{Work} & \textbf{Primary scope} & \textbf{HW} & \textbf{Serve} & \textbf{Ctx} & \textbf{States} & \textbf{Diag.} & \textbf{Sec.} & \textbf{Nature}\\
 \midrule
-ISO/IEC 22989~\cite{iso22989} & AI concepts \& terminology & \none & \none & \none & \none & \none & \half & Normative std.\\
-ISO/IEC 23053~\cite{iso23053} & ML system components \& functions & \none & \half & \none & \none & \none & \none & Normative std.\\
-NIST AI RMF / 600-1~\cite{nist2023airmf,nist2024genai} & Organisational AI risk process & \none & \none & \none & \none & \none & \half & Voluntary guidance\\
-a16z LLM app stack~\cite{a16z2023llm} & LLM application tier (\(\approx\)L5--L7) & \none & \half & \full & \none & \none & \half & Industry, inform.\\
-MLOps refs.~\cite{googlemlops,kreuzberger2022mlops} & ML lifecycle (CI/CD/CT) & \half & \half & \none & \none & \half & \none & Industry / academic\\
-Lu et al.~\cite{lu2023rafm,lu2024agents} & FM-based system \& agent design patterns & \none & \half & \full & \none & \none & \half & Academic, inform.\\
-Serving surveys~\cite{miao2023serving,li2024servingsurvey,pan2025inference} & Serving optimisation techniques & \half & \full & \half & \none & \none & \none & Academic surveys\\
-ACE~\cite{shapiro2023ace} & Agent cognition, 6 layers & \none & \none & \none & \none & \half & \none & Academic, inform.\\
+Reilly, AOSI~\cite{reilly2025aosi} & AI system functions, 7 layers & \full & \half & \half & \half$^{b}$ & \none & \half & Working draft\\
+Liang~\cite{liang2025compute} & AI compute architecture, 7 layers & \full & \half & \full & \none & \none & \none & Preprint\\
+Fleming et al.~\cite{fleming2025ioa} & Agent protocol layers above OSI & \none & \none & \none & \none & \none & \none & Preprint\\
+CSA MAESTRO~\cite{huang2025maestro} & Agentic AI threat model, 7 layers & \half & \half & \half & \none & \none & \full & Industry\\
+Chander~\cite{chander2026map} & How LLMs work, 7 layers & \none & \full & \half & \none & \none & \none & Blog\\
+Smith, AI Layer Model~\cite{smith2026ailayer} & AI component responsibilities, 9 layers & \full & \half & \full & \none & \none & \half & Practitioner\\
+AILIS~\cite{ailis} & AI system vocabulary, 16+ layers & \full & \full & \full & \none & \none & \half & White paper\\
 Rodrigo-Gin\'es~\cite{rodrigogines2025osi} & Multi-agent interoperability, 7 levels & \full & \half & \none & \none & \none & \half & Position paper\\
-OWASP LLM Top 10~\cite{owasp2025llm} & LLM application risk list & \none & \half & \full & \none & \none & \full & Community, inform.\\
-MITRE ATLAS~\cite{mitreatlas} & Adversary TTP knowledge base & \none & \half & \half & \none & \none & \full & Community, inform.\\
+ACE~\cite{shapiro2023ace} & Agent cognition, 6 layers & \none & \none & \none & \none & \half & \none & Preprint\\
+Bucaioni et al.~\cite{bucaioni2025fra} & LLM-integrated system functions & \none & \half & \half & \none & \none & \none & Preprint\\
+Lu et al.~\cite{lu2023rafm,lu2024agents} & FM-based system and agent patterns & \none & \half & \full & \none & \none & \half & Academic\\
+ISO/IEC 22989, 23053~\cite{iso22989,iso23053} & AI concepts; ML system components & \none & \half & \none & \none & \none & \half & Standards\\
+NIST AI RMF / 600-1~\cite{nist2023airmf,nist2024genai} & Organisational AI risk process & \none & \none & \none & \none & \none & \half & Guidance\\
+a16z LLM stack~\cite{a16z2023llm} & LLM application tier & \none & \half & \full & \none & \none & \half & Industry\\
+MLOps refs.~\cite{googlemlops,kreuzberger2022mlops} & ML lifecycle (CI/CD/CT) & \half & \half & \none & \none & \half & \none & Industry, academic\\
+Serving surveys~\cite{miao2023serving,li2024servingsurvey,pan2025inference} & Serving optimisation techniques & \half & \full & \half & \none & \none & \none & Surveys\\
+OWASP, ATLAS~\cite{owasp2025llm,mitreatlas} & Risk list; adversary techniques & \none & \half & \full & \none & \none & \full & Community\\
 \midrule
-\textbf{AOSI (this work)} & \textbf{Single-request GenAI inference, L1--L7} & \full & \full & \full & \full & \full$^{a}$ & \full$^{a}$ & \textbf{Informative proposal}\\
+\textbf{DAIRM (this work)} & \textbf{GenAI inference request path, L1--L6 + planes} & \full & \full & \full & \full & \full$^{a}$ & \full$^{c}$ & \textbf{Informative proposal}\\
 \bottomrule
 \end{tabularx}
-\par\smallskip\raggedright\footnotesize $^{a}$Proposed method and mapping; not yet empirically validated (Section~\ref{sec:discussion}).
+\par\smallskip\raggedright\footnotesize $^{a}$Proposed method; not yet validated empirically (Section~\ref{sec:discussion}). $^{b}$Describes what each layer provides to the layer above (a service description), not a per-request data state. $^{c}$Content, not a novelty claim.
 \end{table}
 
-\paragraph{Positioning.} Table~\ref{tab:compare} shows the gap AOSI targets. Works that reach the hardware either layer agents (Rodrigo-Gin\'es) or catalogue optimisations (serving surveys); works that cover RAG and guardrails stop at the model API; security catalogues are not layer-indexed; and none defines a named data state at every boundary. AOSI's claim is therefore \emph{not} that it is the first layered or OSI-style model for AI, but that it combines (a) full-depth coverage of one request's execution path, (b) named boundary states, (c) a diagnostic method built on them and (d) a layer-indexed security mapping. Whether this combination is useful is an empirical question we have not yet answered (Section~\ref{sec:eval}).
+\paragraph{Positioning.} Table~\ref{tab:compare} shows that several models already cover the full vertical span from hardware to application, and several cover retrieval and security; DAIRM's span and its security table are therefore not distinctive. What no reviewed work provides is the ``States'' and ``Diag.'' columns together: a named, per-request data state at every boundary of the inference path and a latency-attribution method that uses those states. That combination, plus the telemetry attributes that make it executable, is the whole of DAIRM's claim. Whether it is useful in practice is an empirical question we have not yet answered (Section~\ref{sec:eval}).
 
-\section{The AOSI Model}
+\section{The DAIRM Model}
 \label{sec:model}
 
 \subsection{Scope}
 \label{sec:scope}
-AOSI covers \emph{inference-time} execution of generative models---primarily autoregressive transformer language models and, by extension, multimodal models---from client request to device execution and back. Training and fine-tuning pipelines, data governance upstream of the retrieval index, wire protocols, API schemas and certification are out of scope. Named products are illustrative occupants of a layer, not endorsements.
+DAIRM models the request path of generative AI inference serving: from the client request to the hardware execution of each token, and back as a streamed response. It targets autoregressive transformer language models first, and multimodal models by extension. Training, fine-tuning, data pipelines, evaluation and the model registry are out of scope; they enter only through the build/deploy plane, as artifacts that the request path loads. Cluster orchestration, operating systems, containers and host configuration appear in a management plane but are not detailed. For hosted model APIs, layers below the gateway sit behind a \emph{provider boundary} (Section~\ref{sec:provider}).
 
 \subsection{Design principles}
-AOSI's layer definitions are governed by seven principles: (P1) single primary responsibility per layer, with cross-layer components described once per layer they occupy; (P2) a named data state at every boundary; (P3) adjacency of interfaces, with any cross-layer shortcut documented as an explicit coupling; (P4) observability by construction, with telemetry emitted at boundaries and attributable to one layer; (P5) technology neutrality; (P6) awareness of a cost gradient---latency and computational cost increase toward lower layers, while semantic abstraction and policy surface increase toward upper layers; and (P7) security controls placed at the layer where a threat materialises, with defence-in-depth at adjacent layers where justified.
+DAIRM's definitions follow seven principles: (P1) one primary responsibility per layer, with a product that spans layers described once per layer it occupies; (P2) a named, observable data state at every boundary, which must exist per request (metaphors and build-time artifacts do not qualify); (P3) adjacency of interfaces, with any other shortcut documented as an explicit cross-layer coupling; (P4) observability by construction; (P5) technology neutrality; (P6) \emph{compute, data movement and energy concentrate in the lower layers, semantic and policy complexity concentrate in the upper layers, and latency can originate at any layer, so it is attributed per boundary rather than assumed}; and (P7) security controls placed at the layer or plane where a threat materialises.
 
-\subsection{Layers}
+\subsection{Layers and planes}
 
 \begin{figure}[!htbp]
 \centering
 \begin{tikzpicture}[
-  lay/.style={draw=white, line width=0.6pt, minimum width=7.6cm, minimum height=0.86cm, text=white, font=\small\sffamily, align=left, text width=7.3cm, inner sep=3pt},
-  st/.style={font=\footnotesize\sffamily, align=left, anchor=west, text width=3.7cm}]
-\foreach \n/\name/\fun/\col/\state [count=\i] in {
- 7/Application/{End-user interaction, UI rendering}/l7/JSON Payload,
- 6/Orchestration \& Gateway/{Routing, safety, state, context}/l6/Enriched Prompt,
- 5/Retrieval \& Knowledge (RAG)/{Context injection, semantic search, grounding}/l5/Vector Chunks,
- 4/Inference \& Serving/{Scheduling, batching, KV cache, API caching}/l4/Batched Tensors,
- 3/Model \& Weight Architecture/{Mathematical representation of tokens}/l3/Hidden States,
- 2/Framework \& Runtime/{Math ops, graph compilation, parallelism}/l2/Tensor IR,
- 1/Physical Infrastructure/{Power, silicon math, memory, interconnects}/l1/Silicon Voltages}{
-  \node[lay, fill=\col] (L\n) at (0,-0.88*\i) {\textbf{L\n\ \name}\\[-1pt]{\footnotesize \fun}};
-  \node[st] (S\n) at (4.2,-0.88*\i) {$\rightarrow$ \textbf{\state}};
+  lay/.style={draw=white, line width=0.6pt, minimum width=8.2cm, minimum height=0.82cm, text=white, font=\small\sffamily, align=left, text width=7.9cm, inner sep=3pt},
+  pl/.style={draw=#1, line width=1pt, rounded corners=2pt, font=\scriptsize\sffamily, align=left, text width=3.4cm, inner sep=3pt, fill=white},
+  st/.style={font=\scriptsize\sffamily\bfseries, anchor=west},
+  arr/.style={-{Latex[length=2mm]}, thick, gray!70!black}]
+\foreach \n/\name/\fun/\col [count=\i] in {
+ 6/Application/{client, UX, streaming render}/l6,
+ 5/Orchestration \& Gateway/{auth, policy, guardrails, templates, routing, agent loop}/l5,
+ 4/Serving Engine/{admission, scheduling, batching, KV cache, tokenise, sample}/l4,
+ 3/Model Execution Runtime/{executes the model graph: framework, kernels, collectives}/l3,
+ 2/Device \& Driver/{driver, allocator, kernel launch, streams}/l2,
+ 1/Physical Compute \& Interconnect/{accelerator, HBM, NVLink/IB, power, thermals}/l1}{
+  \node[lay, fill=\col] (L\n) at (0,-1.45*\i) {\textbf{L\n\ \name}\\[-1pt]{\scriptsize \fun}};
 }
-\draw[-{Latex[length=2.5mm]}, line width=1pt, gray] ($(L7.north west)+(-0.35,0)$) -- node[left, rotate=90, anchor=south, font=\scriptsize\sffamily, gray]{latency \& cost increase} ($(L1.south west)+(-0.35,0)$);
-\draw[-{Latex[length=2.5mm]}, line width=1pt, gray] ($(S1.south east)+(0.1,0)$) -- node[right, rotate=90, anchor=north, font=\scriptsize\sffamily, gray]{abstraction \& policy surface} ($(S7.north east)+(0.1,0)$);
-\node[font=\footnotesize\sffamily, gray, anchor=south] at ($(L7.north)+(0,0.05)$) {Layer, primary function};
-\node[font=\footnotesize\sffamily, gray, anchor=south west] at ($(S7.north west)+(0,0.05)$) {Down-path output state};
+\foreach \a/\b/\s in {6/5/request payload, 5/4/enriched prompt, 4/3/token-ID batch + KV block table, 3/2/kernel launch stream, 2/1/device instruction \& memory-transaction stream}{
+  \draw[arr] ($(L\a.south west)+(0.5,0)$) -- ($(L\b.north west)+(0.5,0)$) node[midway, st, xshift=2pt] {\s};
+}
+\node[pl=ctx, right=1.1cm of L5, anchor=west] (CTX) {\textbf{\color{ctx}Context Services plane}\\retrieval/RAG, vector stores, rerankers, tools/MCP, memory, caches};
+\node[pl=bld, anchor=west] (BLD) at ($(CTX.west)+(0,-2.5)$) {\textbf{\color{bld}Build/Deploy plane}\\weights, architecture, tokenizer, chat template, compiled graph / kernel IR};
+\node[pl=mgmt, anchor=west] (MG) at ($(CTX.west)+(0,-5.0)$) {\textbf{\color{mgmt}Management plane}\\cluster orchestration, placement, autoscaling, OS/containers};
+\draw[{Latex[length=2mm]}-{Latex[length=2mm]}, thick, ctx] (L5.east) -- node[above, font=\scriptsize\sffamily, align=center]{query /\\passages} (CTX.west);
+\draw[-{Latex[length=2mm]}, thick, dashed, bld] (BLD.west) -- (L4.east);
+\draw[-{Latex[length=2mm]}, thick, dashed, bld] (BLD.west) -- node[below, font=\scriptsize\sffamily, sloped]{artifact} (L3.east);
+\draw[thick, dotted, mgmt] (MG.west) -- ($(L2.east)!0.5!(L1.east)$);
 \end{tikzpicture}
-\caption{The seven AOSI layers and the data state each layer emits on the down-path (request). The up-path (response) returns logits from L3 to L4 for sampling, and detokenised text through L6 output policy to L7. L5 is normally traversed only on the down-path.}
+\caption{The DAIRM request path (L6--L1), the per-request data state on each down-path boundary, and the three planes. Context services are called by L5 and return retrieved passages; the build/deploy plane supplies artifacts (dashed), which are not per-request data. The up-path returns logits $\rightarrow$ sampled token IDs $\rightarrow$ detokenised text deltas $\rightarrow$ streamed response chunks.}
 \label{fig:stack}
 \end{figure}
 
-Figure~\ref{fig:stack} shows the stack. We summarise each layer by scope and characteristic failure modes; full component lists, interfaces and metrics are in the technical report~\cite{bhatt2026zenodo}.
+Figure~\ref{fig:stack} shows the model. We summarise each layer and plane by scope and characteristic failure modes; full component lists, interfaces and metrics are in the technical report~\cite{bhatt2026dairm}.
 
 \begin{description}[leftmargin=0.6cm, itemsep=3pt, style=unboxed]
-\item[L7 Application.] User interaction, request serialisation and rendering of streamed output (chat UIs, IDE assistants, SDKs; SSE or WebSocket streaming). Failure modes: client timeouts shorter than server SLOs, proxies that buffer and defeat streaming, retry storms that amplify load below, rendering stalls misattributed to the model.
-\item[L6 Orchestration \& Gateway.] The policy enforcement point: authentication, quotas, model routing, prompt and chat templates, session memory, input and output guardrails, and invocation of L5. Failure modes: prompt bloat from unbounded history, guardrail latency dominating time-to-first-token (TTFT), output moderation that buffers the stream, template mismatch with the model's chat format, prompt injection passing policy checks.
-\item[L5 Retrieval \& Knowledge.] Query embedding, approximate-nearest-neighbour search, hybrid retrieval, ACL filtering and reranking over the index \emph{as served}~\cite{lewis2020rag}. Failure modes: retrieval lag (non-resident index, remote hops), low recall from embedding or chunking mismatch, stale indexes, cross-tenant ACL leakage, poisoned documents.
-\item[L4 Inference \& Serving.] Tokenisation, admission control, iteration-level scheduling~\cite{yu2022orca}, KV-cache management~\cite{kwon2023paged}, prefix caching, chunked prefill~\cite{agrawal2023sarathi}, disaggregation~\cite{zhong2024distserve}, speculative and constrained decoding. Failure modes: KV-cache exhaustion leading to preemption and time-per-output-token (TPOT) spikes, head-of-line blocking from long prefills, over-batching beyond SLO, low prefix-cache hit rates caused by non-deterministic L6 prefixes.
-\item[L3 Model \& Weight Architecture.] The model as mathematics: embeddings, attention variants, MLP or mixture-of-experts blocks, normalisation, output head, and the numerical format of weights, activations and KV cache. Failure modes: numerical instability in low precision, quality regression from quantisation, expert load imbalance, context-length extrapolation failure, configuration mismatch (e.g., positional-encoding scaling).
-\item[L2 Framework \& Runtime.] Lowering of the model program to kernels and collective schedules: frameworks, graph compilers, kernel libraries (e.g., IO-aware attention kernels~\cite{dao2022flash}), device runtimes and collective-communication libraries. Failure modes: graph breaks and recompilation jitter, launch-bound execution at small batch, collective stalls from topology-unaware placement, allocator fragmentation.
-\item[L1 Physical Infrastructure.] Accelerators, memory hierarchy (HBM, SRAM, host memory), intra- and inter-node interconnects, power and cooling. Failure modes: memory-bandwidth saturation during decode~\cite{yuan2024roofline}, thermal or power throttling, link degradation, hardware errors, noisy neighbours under device partitioning.
+\item[L6 Application.] User interaction, request serialisation and rendering of streamed output (chat UIs, IDE assistants, SDKs; SSE or WebSocket streaming). Failure modes: client timeouts shorter than server SLOs, proxies that buffer and defeat streaming, retry storms, rendering stalls misattributed to the model.
+\item[L5 Orchestration \& Gateway.] The policy enforcement point and the home of orchestration: authentication, quotas, model routing, prompt and chat templates, session state, input and output guardrails, the \emph{agent loop} (planning, tool and function calling, MCP/A2A clients) and calls to context services. Failure modes: prompt bloat from unbounded history, guardrail latency dominating time-to-first-token (TTFT), output moderation that buffers the stream, template mismatch with the model's chat template, prompt injection passing policy checks, runaway agent loops.
+\item[L4 Serving Engine.] Admission, queueing, iteration-level scheduling~\cite{yu2022orca}, KV-cache management~\cite{kwon2023paged}, prefix caching, chunked prefill~\cite{agrawal2023sarathi}, disaggregation~\cite{zhong2024distserve}, tokenisation (executing the artifact's tokenizer) and sampling. Failure modes: KV-cache exhaustion leading to preemption and time-per-output-token (TPOT) spikes, head-of-line blocking from long prefills, over-batching beyond SLO, low prefix-cache hit rates caused by non-deterministic L5 prefixes.
+\item[L3 Model Execution Runtime.] Executes the model graph supplied by the build/deploy plane for each scheduled batch, as framework operators, kernels (e.g., IO-aware attention~\cite{dao2022flash}) and collectives. The model artifact \emph{runs} here; it is not itself a layer. Failure modes: recompilation jitter, launch-bound execution at small batch, collective stalls from topology-unaware placement, numerical instability in low precision.
+\item[L2 Device \& Driver.] Driver and device runtime: memory allocation, kernel launch and streams, graph replay, partitioning and error reporting. Failure modes: driver/runtime incompatibility, out-of-memory from fragmentation, device resets. L2 is kept separate from L1 because driver faults (e.g., Xid-class errors) and physical limits need different responses.
+\item[L1 Physical Compute \& Interconnect.] Accelerators, memory hierarchy, intra- and inter-node fabrics, power and cooling. Failure modes: memory-bandwidth-bound decode~\cite{yuan2024roofline}, thermal or power capping, link degradation, hardware errors.
+\item[Context Services plane.] Retrieval and RAG~\cite{lewis2020rag}, vector stores, embedding models, rerankers, tools and MCP servers, memory stores and caches, called by L5 and returning results. Retrieval is \emph{not} a layer: not every request uses it, it is invoked and returns to orchestration, and the up-path never crosses it. Failure modes: retrieval lag, low recall, stale indexes, cross-tenant ACL leakage, poisoned documents.
+\item[Build/Deploy plane.] Produces the artifacts that L4 and L3 load: weights and their numeric format, model architecture and configuration, tokenizer and chat template, and compiled graph or kernel IR (whether compiled ahead of time or at warm-up). Failure modes: configuration mismatch (e.g., positional-encoding scaling), quality regression from quantisation, tampered artifacts, stale compiled plans.
 \end{description}
 
-\subsection{The data-state chain}
-\label{sec:chain}
+\noindent\textbf{Ownership of cross-layer concerns.} The tokenizer and chat template are artifacts executed at L4; L5 may pre-tokenise for budgeting, a documented coupling. Quantisation has one owner per aspect: the artifact owns the format, L4 owns the deploy-time selection, and L3 kernels realise it. The KV cache is managed by L4, computed by L3 and held in L1 memory.
 
-\begin{figure}[!htbp]
+\subsection{Boundary data states}
+\label{sec:states}
+
+\begin{table}[!htbp]
 \centering
-\begin{tikzpicture}[
-  box/.style={draw, rounded corners=2pt, font=\scriptsize\sffamily, align=center, minimum height=1.75cm, text width=1.68cm, inner sep=2pt},
-  arr/.style={-{Latex[length=1.6mm]}, thick}]
-\node[box, fill=l7!20] (a) {\textbf{JSON Payload}\\ model, messages, params};
-\node[box, fill=l6!20, right=0.25cm of a] (b) {\textbf{Enriched Prompt}\\ policy, template, history, turn};
-\node[box, fill=l5!20, right=0.25cm of b] (c) {\textbf{Vector Chunks}\\ top-$k$ text, scores, provenance};
-\node[box, fill=l4!20, right=0.25cm of c] (d) {\textbf{Batched Tensors}\\ token IDs, KV block tables};
-\node[box, fill=l3!25, right=0.25cm of d] (e) {\textbf{Hidden States}\\ $[b{\times}s{\times}d]$ $\rightarrow$ logits};
-\node[box, fill=l2!20, right=0.25cm of e] (f) {\textbf{Tensor IR}\\ fused kernels, collectives};
-\node[box, fill=l1!20, right=0.25cm of f] (g) {\textbf{Silicon Voltages}\\ MACs, HBM, links, power};
-\foreach \x/\y in {a/b,b/c,c/d,d/e,e/f,f/g} \draw[arr] (\x) -- (\y);
-\foreach \n/\l in {a/L7,b/L6,c/L5,d/L4,e/L3,f/L2,g/L1} \node[font=\scriptsize\sffamily\bfseries, above=1pt of \n] {\l};
-\end{tikzpicture}
-\caption{The canonical down-path data-state chain. Each state is the representation of a request as it leaves a layer and is the natural capture point for boundary telemetry.}
-\label{fig:chain}
-\end{figure}
+\caption{DAIRM boundary data states. Each exists per request and can be captured or measured (P2). Activations and the KV cache are resident device-memory state, not boundary data; weights, tokenizer and compiled graph are build/deploy artifacts.}
+\label{tab:states}
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{1.9cm}>{\raggedright\arraybackslash}p{4.4cm}>{\raggedright\arraybackslash}p{2.9cm}Y@{}}
+\toprule
+\textbf{Boundary} & \textbf{Data state} & \textbf{\texttt{dairm.data\_state}} & \textbf{Observable as}\\
+\midrule
+L6 $\rightarrow$ L5 & Request payload (messages, tools, sampling parameters, stream flag) & \texttt{request\_payload} & Body, size, schema validity\\
+Context $\rightarrow$ L5 & Retrieved passages (text, scores, provenance); the query embedding stays inside the service & \texttt{retrieved\_passages} & Passage count, tokens contributed, source IDs\\
+L5 $\rightarrow$ L4 & Enriched prompt (templated messages, tool schemas, sampling parameters, priority) & \texttt{enriched\_prompt} & Prompt tokens after enrichment\\
+L4 $\rightarrow$ L3 & Token-ID batch + KV-cache block table (token IDs, positions, sequence-to-block mappings) & \texttt{token\_batch} & Batch size, tokens per step, KV blocks used\\
+L3 $\rightarrow$ L2 & Kernel launch stream (operator and kernel invocations with tensor arguments) & \texttt{kernel\_stream} & Kernel traces, launch counts\\
+L2 $\rightarrow$ L1 & Device instruction and memory-transaction stream & \texttt{device\_counters} & SM and tensor-pipe activity, DRAM and link bytes\\
+Up-path & Logits $\rightarrow$ sampled token IDs $\rightarrow$ text deltas $\rightarrow$ response chunks & \texttt{token\_stream} & Inter-token latency, stream events\\
+\bottomrule
+\end{tabularx}
+\end{table}
 
-Principle P2 requires a named data state at every boundary (Figure~\ref{fig:chain}). On the down-path: L7 emits a \textbf{JSON payload} (e.g., model, messages, tools, sampling parameters, stream flag); L6 emits an \textbf{enriched prompt}---an ordered sequence of system policy, template, session state, grounding slot and user turn, with routing decision and policy verdicts attached; L5 returns \textbf{vector chunks}---ranked retrieved passages with scores and provenance, merged by L6 into the prompt; L4 forms \textbf{batched tensors}---token and position IDs, attention metadata, KV-cache block tables and batch-slot assignments; L3 produces \textbf{hidden states}---per-block activations and, finally, logits; L2 lowers the computation to \textbf{tensor IR}---captured or compiled graphs, fused kernels and collective schedules; and L1 executes it as \textbf{silicon voltages}---the physical switching behind multiply--accumulate operations, memory transactions and link signalling, observable as utilisation, bandwidth and power. The last label is deliberately physical shorthand: what is observable at L1 is switching activity expressed as hardware counters, memory and link throughput, power and temperature, not voltages as such.
+Table~\ref{tab:states} lists the states. Three design choices distinguish them from a naive ``one artefact per layer'' chain. First, every state is \emph{per request and measurable}; physical metaphors are excluded, and the lowest boundary is defined by what hardware counters can observe. Second, \emph{retrieval returns text}: what crosses back to orchestration is passages with scores and provenance, not vectors, because embeddings are internal to the context service and the serving engine builds its batch from the token IDs of the enriched text. Third, \emph{resident state and artifacts are kept off the path}: activations and the KV cache are produced and consumed in place by L3 kernels running on L1, and model weights and compiled graphs are loaded from the build/deploy plane, so no state is shown flowing ``down'' before it has been computed.
 
-Two properties make the chain useful rather than decorative. First, each state has a measurable size that propagates downward: enriched-prompt token count at L6/L4 determines prefill work at L3--L1; $k$ and chunk length at L5/L6 determine part of that token count; batch composition at L4/L3 determines the arithmetic intensity seen at L1. Second, each state is a \emph{checkpoint for blame}: if the state entering a layer is unchanged and the layer's span grew, the layer itself is implicated; if the incoming state changed, the layer above is implicated (Section~\ref{sec:triage}).
+Two properties make the states useful rather than decorative. Each has a measurable size that propagates downward: enriched-prompt tokens at L5/L4 determine prefill work below; passages and tokens contributed at Context/L5 determine part of that count; batch composition at L4/L3 determines the arithmetic intensity seen at L1. And each is a \emph{checkpoint for blame}: if the state entering a layer is unchanged and the layer's span grew, that layer is implicated; if the incoming state changed, the layer above is implicated (Section~\ref{sec:triage}).
 
-\paragraph{Request lifecycle.} On the down-path, L6 authenticates, routes, applies guardrails and templates, calls L5, and hands the enriched prompt to L4, which tokenises, checks the prefix cache, allocates KV blocks and admits the sequence into a batch; L3--L1 execute the prefill forward pass. The first sampled token fixes TTFT. Each subsequent token is a decode iteration that reads weights and the KV cache from device memory; at typical batch sizes decode tends to be memory-bandwidth-bound~\cite{yuan2024roofline}, so TPOT is governed largely by L4 batching and KV behaviour and by L1 memory bandwidth. Tokens are detokenised at L4 and stream through L6 output policy to L7.
+\subsection{Provider boundary}
+\label{sec:provider}
+For hosted model APIs, L4--L1 (and often parts of L5) are opaque to the consumer. What stays observable is client-side TTFT and inter-token latency, the consumer's own orchestration and context-service spans, token usage returned by the API, and any provider-reported latency or cache fields. The decomposition in Section~\ref{sec:diag} still separates the consumer's own time from time behind the boundary, and isolation tests can show whether a regression is inside or outside it, though not which provider-side layer caused it.
 
-\section{Cross-Layer Diagnostics}
+\section{Boundary-Attributed Diagnostics}
 \label{sec:diag}
 
 \subsection{Principle}
-A protocol analyser makes network faults tractable by decoding a captured unit layer by layer. AOSI proposes the analogous discipline for generative AI: \emph{each request should produce a trace in which every span is attributed to exactly one AOSI layer, and each boundary hand-off is timestamped}. Concretely, an AOSI-aligned deployment propagates one trace context from L7 through L4~\cite{w3ctracecontext,sigelman2010dapper}; tags each span with a layer attribute alongside OpenTelemetry generative AI attributes~\cite{otelgenai}; exports serving-engine and device metrics on a common time base with node, device and replica labels so that spans can be joined to device telemetry; and captures framework-level profiles on demand.
+A protocol analyser makes network faults tractable by decoding a captured unit layer by layer. DAIRM proposes the analogous discipline for generative AI: \emph{each request should produce a trace in which every span is attributed to exactly one layer or plane, and each boundary hand-off is timestamped together with its data state}. Concretely, a DAIRM-aligned deployment propagates one trace context from L6 through L4 and into context-service calls~\cite{w3ctracecontext,sigelman2010dapper}; tags each span with the attributes of Section~\ref{sec:telemetry} alongside OpenTelemetry generative AI attributes~\cite{otelgenai}; exports serving-engine metrics~\cite{vllmmetrics} and device metrics~\cite{dcgmfields} on a common time base with node, device and replica labels; and captures runtime profiles on demand.
 
 \subsection{Latency decomposition}
 For a streamed response with $N_{\text{out}}$ output tokens,
 \begin{align}
 E2E &\approx \text{TTFT} + (N_{\text{out}}-1)\cdot\text{TPOT},\\
-\text{TTFT} &\approx t_{L7} + t_{L6}^{\text{gw}} + t_{L6}^{\text{guard,in}} + t_{L5} + t_{L4}^{\text{queue}} + t_{L4}^{\text{tok}} + t_{\text{prefill}}^{L3\text{--}L1} + t_{\text{up}},\\
-\text{TPOT} &\approx t_{L4}^{\text{sched}} + t_{\text{decode}}^{L3\text{--}L1} + t_{L6}^{\text{guard,out}}.
+\text{TTFT} &\approx t_{L6} + t_{L5}^{\text{gw}} + t_{L5}^{\text{guard,in}} + t_{\text{ctx}} + t_{L4}^{\text{queue}} + t_{L4}^{\text{tok}} + t_{\text{prefill}}^{L3\text{--}L1} + t_{\text{up}},\\
+\text{TPOT} &\approx t_{L4}^{\text{sched}} + t_{\text{decode}}^{L3\text{--}L1} + t_{L5}^{\text{guard,out}}.
 \end{align}
-The decomposition halves the search space. TTFT inflated with TPOT normal points \emph{above} L4 compute (L6 overhead, L5 retrieval, L4 queueing, or longer prompts). TPOT inflated with TTFT normal points at or \emph{below} L4 decode (KV pressure, batch growth, memory bandwidth, throttling, collectives) or at buffering output guardrails in L6. Both inflated suggests systemic causes: overload, device degradation, or retry storms.
+TTFT inflated with TPOT normal means the cause is upper-layer time (gateway, guardrails, context services), \emph{or} L4 queueing, \emph{or} prefill compute for longer prompts; the three are separated by the L5 and context spans, the L4 queue span versus the prefill span, and the prompt-token count at L5/L4. TPOT inflated with TTFT normal points at L4 decode (KV pressure, batch growth), L3 kernels (attention cost grows with context; collectives), L1 memory bandwidth or clock events, or buffering output guardrails in L5. Both inflated suggests overload, device degradation or retry storms.
 
 \subsection{Discriminating three commonly confused causes}
-Table~\ref{tab:discrim} lists signals that separate L5 retrieval lag, L4 KV-cache pressure and L1 memory-bandwidth saturation, each of which can surface as ``the model is slow''. The signatures follow from the mechanisms described in the serving and roofline literature~\cite{kwon2023paged,yuan2024roofline}; they are hypotheses to be calibrated per deployment, not measured thresholds.
+Table~\ref{tab:discrim} lists signals that separate context-service delay, L4 KV-cache pressure and memory-bandwidth-bound decode, each of which surfaces as ``the model is slow''. The signatures follow from the mechanisms in the serving and roofline literature~\cite{kwon2023paged,yuan2024roofline}; they are hypotheses to be calibrated per deployment, not measured thresholds.
 
 \begin{table}[!htbp]
 \centering
-\caption{Discriminating signals for three causes of perceived slowness. Signatures are derived from mechanism, not measurement, and must be calibrated per deployment.}
+\caption{Discriminating signals for three causes of perceived slowness. Derived from mechanism, not measurement; calibrate per deployment.}
 \label{tab:discrim}
 \small
-\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.1cm}YYY@{}}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.0cm}YYY@{}}
 \toprule
-& \textbf{L5 retrieval lag} & \textbf{L4 KV-cache pressure} & \textbf{L1 memory-bandwidth saturation}\\
+& \textbf{Context-service delay} & \textbf{L4 KV-cache pressure} & \textbf{Memory-bandwidth-bound decode}\\
 \midrule
 Latency signature & TTFT up; TPOT unchanged & TPOT up and spiky; TTFT up if admission blocks & TPOT up smoothly with batch and context\\
-Trace location & L5 span grows before any L4 span & L4 queue span grows; decode shows preemption gaps & L4 decode span grows uniformly per step\\
-Engine / device signals & Engine and device normal & KV utilisation near capacity; preemption counters rise & Memory-bandwidth utilisation pinned near ceiling; compute pipes comparatively idle\\
-Isolation test & Replay with retrieval bypassed and an equal-length fixed context & Replay with reduced concurrency or larger KV budget & Fixed-batch sweep of context length or batch size\\
+Trace location & Context span grows before any L4 span & L4 queue span grows; decode shows preemption gaps & L4 decode span grows uniformly per step\\
+Engine / device signals & Engine and device normal & KV usage near capacity; preemption counters rise & DRAM utilisation high; tensor-pipe utilisation comparatively low\\
+Isolation test & Replay with context services bypassed and an equal-length fixed context & Replay with lower concurrency or a larger KV budget & Fixed-batch sweep of context length or batch size\\
+Conclusion if test reproduces & Context services implicated & L4 implicated & \emph{Consistent with} bandwidth-bound decode (attention cost at L3 also grows with context)\\
 Remediate at & Index residency, co-location, smaller $k$ & Prefix caching, KV quantisation, admission limits, chunked prefill & Weight/KV quantisation, speculative decoding, scale-out\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
+The third column is deliberately hedged. High memory-bandwidth use during decode is usually a property of the workload's arithmetic intensity, not a hardware fault, and attention-kernel cost and KV reads also grow with context, so a context sweep can show behaviour consistent with bandwidth-bound decode but cannot by itself prove an L1 cause.
+
 \subsection{Triage procedure}
 \label{sec:triage}
-Diagnosis proceeds top-down for attribution and bottom-up for confirmation: (1)~quantify the symptom (TTFT, TPOT, E2E, error rate, goodput or quality; percentile and window); (2)~decompose it into TTFT and TPOT movement; (3)~walk the trace top-down (L7$\rightarrow$L4) against a baseline---the first layer whose span distribution shifted is the \emph{candidate layer}; (4)~check the boundary state entering that layer (e.g., prompt tokens at L6/L4, $k$ at L5/L6, batch size at L4/L3), since a changed input implicates the layer above; (5)~correlate with lower-layer telemetry (engine metrics, framework profiles, device counters); (6)~run the candidate layer's isolation test, changing exactly one variable; (7)~confirm bottom-up that lower layers are healthy under the test; (8)~remediate at the owning layer and re-measure the original symptom; and (9)~record the incident with its AOSI layer attribution.
-Step~9 is what would make AOSI testable at scale: a corpus of layer-attributed incidents is the dataset our evaluation plan requires (Section~\ref{sec:eval}).
+Diagnosis proceeds top-down for attribution and bottom-up for confirmation: (1)~quantify the symptom (TTFT, TPOT, E2E, error rate, goodput or quality; percentile and window); (2)~decompose it into TTFT and TPOT movement; (3)~walk the trace top-down (L6$\rightarrow$L5/context$\rightarrow$L4) against a baseline---the first layer or plane whose span distribution shifted is the \emph{candidate}; (4)~check the boundary state entering the candidate (prompt tokens at L5/L4, passages at Context/L5, batch size at L4/L3), since a changed input implicates the layer above; (5)~correlate with lower-layer telemetry (engine metrics, runtime profiles, device counters); (6)~run the candidate's isolation test, changing one variable; (7)~confirm bottom-up that lower layers are healthy; (8)~remediate at the owning layer or plane and re-measure; and (9)~record the incident with its root-cause and manifestation layers. Step~9 is what would make DAIRM testable at scale (Section~\ref{sec:eval}).
 
-\section{Security Mapping}
-\label{sec:security}
-
-Under principle P7, each threat is placed at the layer where it materialises. Table~\ref{tab:owasp} maps the OWASP Top 10 for LLM Applications (2025)~\cite{owasp2025llm} onto AOSI. The mapping is the author's; it is intended to be contested and refined. Two observations follow. First, several risks are multi-layer by nature: prompt injection is \emph{enforced against} at L6 but \emph{arrives} via L7 (direct) or L5 (indirect, through retrieved content~\cite{greshake2023indirect}); misinformation is the joint outcome of grounding (L5), model behaviour (L3) and presentation (L7). Second, a layer index exposes control gaps that a flat list hides: an architecture whose only control for LLM04 and LLM08 is an L6 guardrail has no control at the layer (L5 or L3) where poisoning materialises. The same index can be applied to MITRE ATLAS techniques~\cite{mitreatlas} and the NIST adversarial ML taxonomy~\cite{nist2025aml}; we leave that mapping to future work.
+\subsection{Telemetry attributes}
+\label{sec:telemetry}
+Table~\ref{tab:attrs} summarises the proposed attributes, designed to complement the OpenTelemetry generative AI conventions~\cite{otelgenai}. Engine and device names vary by version; for example, current vLLM documentation lists \texttt{vllm:kv\_cache\_usage\_perc} and \texttt{vllm:num\_preemptions}~\cite{vllmmetrics}, and the current DCGM field list uses \texttt{DCGM\_FI\_PROF\_DRAM\_UTIL\_RATIO}~\cite{dcgmfields}; implementers should pin versions.
 
 \begin{table}[!htbp]
 \centering
-\caption{OWASP Top 10 for LLM Applications (2025) mapped to the AOSI layer(s) where each risk materialises, with representative layer-local controls. Author's mapping; illustrative, not normative.}
-\label{tab:owasp}
-\small
-\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{4.1cm}>{\raggedright\arraybackslash}p{2.6cm}Y@{}}
+\caption{Proposed \texttt{dairm.*} telemetry attributes (selection; full list in the technical report~\cite{bhatt2026dairm}).}
+\label{tab:attrs}
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{5.6cm}>{\raggedright\arraybackslash}p{2.1cm}Y@{}}
 \toprule
-\textbf{OWASP risk (2025)} & \textbf{Primary layer(s)} & \textbf{Representative controls at that layer}\\
+\textbf{Attribute} & \textbf{Where} & \textbf{Meaning}\\
 \midrule
-LLM01 Prompt Injection & L6 (arrives via L7 or L5) & Separation of system, user and retrieved content; input classifiers; least-privilege tool scopes; L5 content scanning\\
-LLM02 Sensitive Information Disclosure & L6, L5, L3 & Output filtering and redaction (L6); ACL-filtered retrieval (L5); training-data extraction testing (L3)\\
-LLM03 Supply Chain & L2, L3 & Pinned, verified dependencies and SBOMs (L2); signed, hash-verified model artefacts and provenance (L3)\\
-LLM04 Data and Model Poisoning & L3 (weights), L5 (corpus) & Model provenance and red-teaming (L3); ingestion integrity and provenance checks (L5)\\
-LLM05 Improper Output Handling & L6, L7 & Schema validation (L6); rendering that never executes untrusted content (L7)\\
-LLM06 Excessive Agency & L6 (future L8) & Tool permission scoping, human approval gates, action budgets\\
-LLM07 System Prompt Leakage & L6 & Secrets kept out of prompts; leakage detection on output\\
-LLM08 Vector and Embedding Weaknesses & L5 & Vector-store access control; tenant isolation; encryption at rest\\
-LLM09 Misinformation & L5, L3, L7 (cross-layer) & Grounding evaluation and freshness (L5); quality evaluation (L3); citation display (L7)\\
-LLM10 Unbounded Consumption & L4, L6 & Token and time budgets (L4); rate limits and quotas (L6)\\
+\texttt{dairm.layer} (int 1--6) & Request path & Layer to which the span is attributed\\
+\texttt{dairm.plane} & All spans & \texttt{request\_path}, \texttt{context\_services}, \texttt{build\_deploy} or \texttt{management}\\
+\texttt{dairm.data\_state} & Boundary spans & One of the values in Table~\ref{tab:states}\\
+\texttt{dairm.l5.prompt\_tokens\_}\allowbreak\texttt{enriched} & L5 & Prompt tokens after templating, history and passages\\
+\texttt{dairm.ctx.service},\newline \texttt{dairm.ctx.tokens\_contributed} & Context services & Kind of service; tokens its results add to the prompt\\
+\texttt{dairm.l4.queue\_time\_ms},\newline \texttt{dairm.l4.preempted} & L4 & Queueing before first scheduling; whether the sequence was preempted\\
+\texttt{dairm.device\_id},\newline \texttt{dairm.artifact.id} & L2/L1; build/deploy & Join keys to device telemetry and to the model artifact\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-Beyond OWASP, AOSI surfaces threats that application-level lists tend not to emphasise: cross-request leakage through shared prefix or KV caches (L4), unsafe deserialisation of model files and compromised kernels or compilers (L2), and hardware side channels or memory residue between tenants (L1). An AOSI-aligned description of a system should state, per layer, which threats are in scope and which controls apply, and should not rely on a single layer as the sole control for threats that materialise at another.
+\section{Security Mapping}
+\label{sec:security}
+
+Under principle P7, each threat is placed at the layer or plane where it materialises. Table~\ref{tab:owasp} maps the OWASP Top 10 for LLM Applications (2025)~\cite{owasp2025llm} onto DAIRM. Per-layer threat mapping is not new~\cite{huang2025maestro}; the mapping is the author's, offered as content and intended to be contested. Two observations follow. First, several risks are multi-location by nature: prompt injection is \emph{enforced against} at L5 but \emph{arrives} via L6 (direct) or through context services (indirect, via retrieved content~\cite{greshake2023indirect}); misinformation is the joint outcome of grounding, the model artifact and presentation. Second, a location index exposes control gaps that a flat list hides: an architecture whose only control for LLM04 and LLM08 is an L5 guardrail has no control where poisoning materialises (the corpus or the weights).
+
+\begin{table}[!htbp]
+\centering
+\caption{OWASP Top 10 for LLM Applications (2025) mapped to DAIRM locations, with representative controls. Author's mapping; illustrative.}
+\label{tab:owasp}
+\small
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{4.1cm}>{\raggedright\arraybackslash}p{2.9cm}Y@{}}
+\toprule
+\textbf{OWASP risk (2025)} & \textbf{Primary location(s)} & \textbf{Representative controls}\\
+\midrule
+LLM01 Prompt Injection & L5 (arrives via L6 or context) & Separation of system, user and retrieved content; input classifiers; least-privilege tools; content scanning in context services\\
+LLM02 Sensitive Information Disclosure & L5, context, build & Output redaction (L5); ACL-filtered retrieval (context); training-data extraction testing (build)\\
+LLM03 Supply Chain & Build, L3 & Signed, hash-verified artifacts and provenance; pinned dependencies and SBOMs\\
+LLM04 Data and Model Poisoning & Build (weights), context (corpus) & Model provenance and red-teaming; ingestion integrity checks\\
+LLM05 Improper Output Handling & L5, L6 & Schema validation (L5); rendering that never executes untrusted content (L6)\\
+LLM06 Excessive Agency & L5 (agent loop), context (tools) & Tool permission scoping, human approval gates, action budgets\\
+LLM07 System Prompt Leakage & L5 & Secrets kept out of prompts; leakage detection on output\\
+LLM08 Vector and Embedding Weaknesses & Context & Vector-store access control; tenant isolation; encryption at rest\\
+LLM09 Misinformation & Context, build, L6 & Grounding evaluation and freshness; quality evaluation; citation display\\
+LLM10 Unbounded Consumption & L4, L5 & Token and time budgets (L4); rate limits and quotas (L5)\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Beyond OWASP, the location index surfaces threats that application-level lists tend not to emphasise: embedding inversion, which can recover text from stored vectors in context services~\cite{morris2023inversion}; cross-request leakage through shared prefix or KV caches via timing side channels at L4~\cite{song2024earlybird}; unsafe deserialisation of model files at L3; and hardware side channels or memory residue between tenants at L2/L1.
 
 \section{Illustrative Worked Example}
 \label{sec:case}
 
-\noindent\fbox{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\small\textbf{Note.} This section is a constructed, hypothetical walk-through intended only to show how the model's vocabulary and procedure are applied. It does not describe a real incident and reports no measurements.}}
+\noindent\fbox{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\small\textbf{Note.} This section is a constructed, hypothetical walk-through intended only to show how the vocabulary and procedure are applied. It does not describe a real incident and reports no measurements.}}
 
 \medskip
-\noindent\textbf{Setting.} Consider an internal question-answering assistant: a web client (L7) calls an AI gateway that applies a system prompt, conversation history and guardrails (L6); the gateway retrieves policy documents from a vector index (L5); a self-hosted serving engine with continuous batching and paged KV cache (L4) runs a quantised transformer (L3) compiled with a standard framework (L2) on a multi-GPU node (L1).
+\noindent\textbf{Setting.} An internal question-answering assistant: a web client (L6) calls an AI gateway that applies a system prompt, conversation history and guardrails (L5); the gateway retrieves policy documents from a vector index (context services); a self-hosted serving engine with continuous batching and a paged KV cache (L4) runs a quantised model artifact (build/deploy) through a standard runtime (L3) on a multi-GPU node (L2/L1).
 
-\paragraph{Symptom A: ``the assistant got slow this week''.} Step~1 restates the complaint as a metric: suppose the operators observe that p95 TTFT has risen relative to the previous week while TPOT has not. Step~2 therefore directs attention above L4 compute. Walking the trace (Step~3), they compare per-layer span distributions; suppose the L5 span is unchanged but the L4 queue and prefill spans have grown. Step~4 checks the boundary state at L6/L4 and finds that enriched-prompt token counts have grown, because a recent L6 change now replays full conversation history instead of a summary. The input to L4 changed, so the layer \emph{above} is implicated: the root cause is at L6, even though the time is spent at L4--L1. The isolation test (Step~6) replays the same requests with history truncated; if TTFT returns to baseline, the attribution is confirmed. The remediation is at L6 (history windowing or summarisation), not at L4 (adding replicas), which would only have masked the cause. The incident is recorded as \emph{L6, prompt growth, manifesting at L4}.
+\paragraph{Symptom A: ``the assistant got slow this week''.} Step~1 restates the complaint as a metric: suppose p95 TTFT has risen relative to the previous week while TPOT has not. Step~2 therefore points at upper-layer time, L4 queueing or prefill. Walking the trace (Step~3), suppose the context-service span is unchanged but the L4 queue and prefill spans have grown. Step~4 checks the boundary state at L5/L4 and finds that enriched-prompt token counts have grown, because a recent L5 change now replays full conversation history instead of a summary. The input to L4 changed, so the layer \emph{above} is implicated: the root cause is at L5, although the time is spent at L4--L1. The isolation test (Step~6) replays the same requests with history truncated; if TTFT returns to baseline, the attribution is confirmed. The remediation is at L5 (history windowing or summarisation), not at L4 (more replicas), which would only have masked the cause. The incident is recorded as \emph{L5, prompt growth, manifesting at L4}.
 
-\paragraph{Symptom B: ``the assistant cites the wrong policy''.} Latency is normal, so the decomposition is uninformative and the operators move to quality signals. The AOSI boundary states structure the questions: were the \emph{vector chunks} returned at L5/L6 the right documents (a retrieval-evaluation question at L5)? Did they reach the \emph{enriched prompt} intact and in the intended position (an L6 template question)? Given correct context, did the model use it (an L3 question, testable by replaying the identical enriched prompt against a reference-precision model)? Each question isolates one layer by holding the incoming state fixed. If, say, the index had not been refreshed after a policy update, the fault is an L5 freshness failure, which also corresponds to OWASP LLM09 and is mitigated at L5 rather than by a stricter L6 output filter.
+\paragraph{Symptom B: ``the assistant cites the wrong policy''.} Latency is normal, so the decomposition is uninformative and the operators move to quality signals. The boundary states order the questions: were the \emph{retrieved passages} returned to L5 the right documents (a context-services question)? Did they reach the \emph{enriched prompt} intact and in the intended position (an L5 template question)? Given correct context, did the model use it (a question about the build/deploy artifact, testable by replaying the identical enriched prompt against a reference-precision artifact)? Each question isolates one location by holding the incoming state fixed. If the index had not been refreshed after a policy update, the fault is a context-service freshness failure, which also corresponds to OWASP LLM09 and is fixed there rather than by a stricter L5 output filter.
 
-\paragraph{What the example shows and does not show.} The example demonstrates that the vocabulary distinguishes \emph{where time is spent} from \emph{where the cause lies}, and that boundary states give a principled order of questions. It does not show that practitioners using AOSI diagnose faster or more accurately than without it; that is the hypothesis our evaluation plan tests.
+\paragraph{What the example shows and does not show.} It shows that the vocabulary distinguishes \emph{where time is spent} from \emph{where the cause lies}, and that boundary states give a principled order of questions. It does not show that practitioners using DAIRM diagnose faster or more accurately; that is the hypothesis the evaluation plan tests.
 
 \section{Discussion, Limitations and Evaluation Plan}
 \label{sec:discussion}
 
 \subsection{Limitations and threats to validity}
 \begin{itemize}[leftmargin=*,itemsep=2pt]
-\item \textbf{No empirical validation.} The layer boundaries, discriminating signals and security mapping are argued from mechanism and the literature, not measured. Thresholds in the technical report are explicitly illustrative.
-\item \textbf{No standards adoption.} AOSI is a single-author proposal. It has not been reviewed or adopted by ISO/IEC, ITU-T, IETF, NIST or any other body.
-\item \textbf{Construct validity of boundaries.} Real systems violate strict layering: serving engines ship their own kernels (L4/L2), gateways cache responses (L6 behaving like L4), and embedding models are served by L4 engines inside L5. AOSI handles these through principle P1 (describe a component once per layer it occupies) and P3 (document couplings), but whether this remains workable for real inventories is untested.
-\item \textbf{Ordering of L5.} Retrieval is placed between orchestration and serving because it transforms the prompt before serving; it is, however, invoked by L6 and is not on the up-path. Alternative placements (e.g., retrieval as a peer service of L6) are defensible.
-\item \textbf{Scope.} Training, fine-tuning and data pipelines are excluded; agentic, multi-step and multi-agent workflows are reserved for future layers. Many current production issues arise exactly there.
-\item \textbf{Author bias.} The comparison in Table~\ref{tab:compare} and the mapping in Table~\ref{tab:owasp} were produced by the model's author. Independent replication of both is needed.
-\item \textbf{Rapid technological change.} Named components will date quickly. The model's claim is that the \emph{layers and boundary states} are stable even as occupants change; this is itself a hypothesis.
+\item \textbf{No empirical validation.} The boundaries, discriminating signals and security mapping are argued from mechanism and the literature, not measured. Thresholds in the technical report are explicitly illustrative.
+\item \textbf{Crowded design space.} Many OSI-inspired AI models exist (Section~\ref{sec:related}). DAIRM's claim rests only on the boundary states, the diagnostic method and the telemetry attributes; if a prior work providing these is found, the claim narrows accordingly.
+\item \textbf{No standards adoption.} DAIRM is a single-author proposal. It has not been reviewed or adopted by ISO/IEC, ITU-T, the IETF, NIST or any other body.
+\item \textbf{Construct validity of boundaries.} Real systems violate strict layering: serving engines ship their own kernels (L4/L3), gateways cache responses, and embedding models used by context services are themselves served by an L4 engine. DAIRM handles these through P1 (describe a component once per layer it occupies), P3 (document couplings) and nested traces, but whether this stays workable for real inventories is untested.
+\item \textbf{Planes versus layers.} Treating retrieval as a plane fixes the ordering problem of a ``retrieval layer'' but makes context services less visible in a simple stack diagram. Long-context designs without retrieval and in-model retrieval simply do not use the plane.
+\item \textbf{Scope.} Training, fine-tuning and data pipelines are excluded, and multi-step agent workflows are modelled only as repeated passes through L5. Many production issues arise exactly there.
+\item \textbf{Author bias and AI assistance.} The comparison in Table~\ref{tab:compare} and the mapping in Table~\ref{tab:owasp} were produced by the model's author with AI-assisted drafting; independent replication of both is needed.
 \end{itemize}
 
 \subsection{Evaluation plan}
 \label{sec:eval}
-We propose three studies, ordered by cost.
+We propose four studies, ordered by cost.
 \begin{enumerate}[leftmargin=*,itemsep=2pt]
-\item \textbf{Incident classification study.} Collect publicly available post-incident reports and issue-tracker reports from open-source serving engines, gateways and RAG frameworks. Two or more independent raters classify each by AOSI layer of \emph{root cause} and of \emph{manifestation}, using a written codebook. Outcomes: inter-rater agreement (e.g., Cohen's or Fleiss' $\kappa$), the fraction of reports that cannot be assigned to a layer (a direct test of coverage), and the frequency with which root cause and manifestation layers differ (a test of the claim that the distinction matters).
-\item \textbf{Practitioner survey and card-sorting.} Ask practitioners across application, platform, ML and infrastructure roles to sort component and symptom cards into layers, and to rate the clarity and usefulness of each boundary. Outcomes: agreement with AOSI's assignments, boundaries with systematic disagreement, and candidate revisions.
-\item \textbf{Controlled diagnosis experiment.} Inject single, known faults (e.g., retrieval delay, KV-budget reduction, prompt growth, power capping) into an instrumented open-source stack, and compare time-to-correct-attribution and accuracy for participants with and without AOSI-tagged traces. This is the only study that would test the model's central practical claim.
+\item \textbf{Incident classification study.} Collect public post-incident reports and issue-tracker reports from open-source serving engines, gateways and RAG frameworks. Two or more independent raters classify each by DAIRM location of \emph{root cause} and of \emph{manifestation}, using a written codebook. Outcomes: inter-rater agreement (e.g., Cohen's or Fleiss' $\kappa$), the fraction of reports that cannot be assigned (a coverage test), and how often root cause and manifestation differ.
+\item \textbf{Practitioner card-sorting.} Ask practitioners across application, platform, ML and infrastructure roles to sort component and symptom cards into layers and planes and rate each boundary's clarity. Outcomes: agreement with DAIRM's assignments and boundaries with systematic disagreement.
+\item \textbf{Instrumented case study.} Deploy an open-source serving engine with a RAG service and OpenTelemetry traces tagged with \texttt{dairm.layer}, inject single known faults (slow retrieval, KV-cache pressure through concurrency or long contexts, bandwidth-bound decode), and measure whether the discriminators of Table~\ref{tab:discrim} attribute each fault correctly, reporting measured thresholds.
+\item \textbf{Controlled diagnosis experiment.} Compare time-to-correct-attribution and accuracy for participants with and without DAIRM-tagged traces on the same injected faults. This is the only study that would test the central practical claim.
 \end{enumerate}
-Results from any of these studies, including negative results, would warrant revision of the model.
+Results from any of these, including negative results, would warrant revision of the model.
 
-\subsection{Future layers}
-Three extensions are reserved and informative: an L8 for agentic workflows (planning, tool use, multi-agent coordination), where ACE~\cite{shapiro2023ace}, Lu et al.'s agent architecture~\cite{lu2024agents} and Rodrigo-Gin\'es's interoperability stack~\cite{rodrigogines2025osi} are natural points of alignment; an L9 or cross-cutting plane for distributed and federated inference across sites; and a global optimisation plane relating per-layer controls to end-to-end goals such as energy per output token. An open question is whether these are layers at all, or planes that cut across L1--L7.
+\subsection{Future work}
+An earlier version of this work reserved layers ``L8'' (agentic workflows) and ``L9'' (distributed inference) above the stack; these were removed because Fleming et al.\ had already proposed L8/L9 agent layers above OSI~\cite{fleming2025ioa}. Instead, future work will (a) model multi-step agent executions as repeated passes through the request path with nested L5 spans; (b) model distributed and disaggregated inference within L4--L1, adding an inter-node KV-transfer boundary state; (c) add a separate training/build view that meets the request path at the model artifact, as Chander argues is necessary~\cite{chander2026map}; and (d) define cross-layer efficiency metrics such as energy per output token.
 
 \section{Conclusion}
 \label{sec:conclusion}
-Generative AI inference spans tiers that are engineered, observed and secured separately, and the field lacks a shared way to say where a problem lives. AOSI borrows OSI's method---ordered layers, stable boundaries and named data units---and applies it to the execution path of a single generative request, from silicon to application. Its specific contribution is the combination of full-depth layering, a named data state at every boundary, a layer-isolation diagnostic method built on those states, and a layer-indexed security mapping; it does not claim to be the first layered or OSI-inspired model for AI. The model is unvalidated, and its value depends on whether practitioners can apply it consistently and whether it shortens diagnosis. We have outlined studies to test both, and we invite counter-examples and alternative boundaries.
+Generative AI inference spans tiers that are engineered, observed and secured separately, and practitioners lack a shared way to say where a problem lives. Many layered and OSI-inspired models for AI already exist, and DAIRM claims none of the general idea. Its contribution is narrower: a named, observable data state at every boundary of the inference request path; a boundary-attributed diagnostic method that uses those states to separate context-service delay, serving-engine queueing or KV-cache pressure, and memory-bandwidth-bound decode; and telemetry attributes that make the method executable. The model is unvalidated, and its value depends on whether practitioners can apply it consistently and whether it shortens diagnosis. We have outlined studies to test both and invite counter-examples, alternative boundaries and missed prior art.
+
+\section*{Acknowledgements and AI-Assistance Disclosure}
+Drafting, editing, formatting and figure preparation were assisted by AI tools. The conceptual model, design decisions and final content are the author's, and the author takes full responsibility for them. All figures are drawn in TikZ from source; no figure is an AI-generated image.
 
 \section*{Availability}
-The full specification (version 1.2.1), including per-layer interfaces, metrics, failure modes, a diagnostic matrix and proposed telemetry attributes, is archived at \url{https://doi.org/10.5281/zenodo.24073122}~\cite{bhatt2026zenodo} and maintained at \url{https://github.com/CodingThrill0012/aosi-model} under CC-BY-4.0.
+The technical report DAIRM-TR-0001 (version 2.0.0), including per-layer interfaces, metrics, failure modes, a troubleshooting matrix and the full telemetry attribute list, is maintained at \url{https://github.com/CodingThrill0012/dairm} under CC-BY-4.0 and archived under the concept DOI \url{https://doi.org/10.5281/zenodo.24073121}~\cite{bhatt2026dairm}. It supersedes AOSI v1.2.1 (\url{https://doi.org/10.5281/zenodo.24073122}).
 
 {\footnotesize\setlength{\bibsep}{1pt}
 \bibliographystyle{unsrtnat}

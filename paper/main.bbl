@@ -1,4 +1,4 @@
-\begin{thebibliography}{40}
+\begin{thebibliography}{55}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -64,15 +64,30 @@ Hubert Zimmermann.
 \newblock \emph{IEEE Transactions on Communications}, 28\penalty0 (4):\penalty0 425--432, 1980.
 \newblock \doi{10.1109/TCOM.1980.1094702}.
 
-\bibitem[{OWASP GenAI Security Project}(2025)]{owasp2025llm}
-{OWASP GenAI Security Project}.
-\newblock {{OWASP} Top 10 for {LLM} Applications 2025}, 2025.
-\newblock URL \url{https://genai.owasp.org/llm-top-10/}.
+\bibitem[Reilly(2025)]{reilly2025aosi}
+Shawn Reilly.
+\newblock {{AOSI} Reference Model for Artificial Intelligence ({AOSI} = {AI} Open Systems Interconnection), version 1.0}.
+\newblock GitHub repository kahalewai/aosi (created 28 December 2025), 2025.
+\newblock URL \url{https://github.com/kahalewai/aosi}.
 
-\bibitem[Bhatt(2026)]{bhatt2026zenodo}
+\bibitem[{OpenTelemetry}()]{otelgenai}
+{OpenTelemetry}.
+\newblock {Semantic Conventions for Generative {AI}}.
+\newblock GitHub repository open-telemetry/semantic-conventions-genai.
+\newblock URL \url{https://github.com/open-telemetry/semantic-conventions-genai}.
+\newblock Accessed 9 November 2026.
+
+\bibitem[Huang(2025)]{huang2025maestro}
+Ken Huang.
+\newblock {Agentic {AI} Threat Modeling Framework: {MAESTRO}}.
+\newblock Cloud Security Alliance blog, 6 February 2025, 2025.
+\newblock URL \url{https://cloudsecurityalliance.org/blog/2025/02/06/agentic-ai-threat-modeling-framework-maestro}.
+
+\bibitem[Bhatt(2026)]{bhatt2026dairm}
 Divyendu Bhatt.
-\newblock {{AOSI-RFC-0001}: The {AI} Open Systems Interconnection ({AOSI}) Reference Model: A 7-Layer Stack for Generative {AI} Execution}.
-\newblock Zenodo, version 1.2.1, 2026.
+\newblock {DAIRM-TR-0001}: {DAIRM}: Divyendu's data-state-aware {AI} reference model for generative {AI} inference systems.
+\newblock Technical Report / Working Draft Version 2.0.0, Independent, 2026.
+\newblock Concept DOI covering all versions; supersedes AOSI v1.2.1, doi:10.5281/zenodo.24073122.
 
 \bibitem[Dijkstra(1968)]{dijkstra1968the}
 Edsger~W. Dijkstra.
@@ -104,52 +119,59 @@ Benjamin~H. Sigelman, Luiz~Andr{\'e} Barroso, Mike Burrows, Pat Stephenson, Mano
 \newblock W3C Recommendation.
 \newblock URL \url{https://www.w3.org/TR/trace-context/}.
 
-\bibitem[{OpenTelemetry}()]{otelgenai}
-{OpenTelemetry}.
-\newblock {Semantic Conventions for Generative {AI} Systems}.
-\newblock URL \url{https://opentelemetry.io/docs/specs/semconv/gen-ai/}.
+\bibitem[Liang(2025)]{liang2025compute}
+Bor-Sung Liang.
+\newblock {AI} compute architecture and evolution trends.
+\newblock \emph{arXiv preprint arXiv:2508.21394}, 2025.
+\newblock URL \url{https://arxiv.org/abs/2508.21394}.
+
+\bibitem[Rodrigo-Gin{\'e}s(2025)]{rodrigogines2025osi}
+Francisco-Javier Rodrigo-Gin{\'e}s.
+\newblock {Toward an {OSI}-Inspired Stack for Agentic {AI}: From Fragmented Frameworks to Open Standards}.
+\newblock Zenodo, 2025.
+
+\bibitem[Fleming et~al.(2025)Fleming, Muscariello, Pandey, and Kompella]{fleming2025ioa}
+Charles Fleming, Luca Muscariello, Vijoy Pandey, and Ramana Kompella.
+\newblock A layered protocol architecture for the internet of agents.
+\newblock \emph{arXiv preprint arXiv:2511.19699}, 2025.
+\newblock URL \url{https://arxiv.org/abs/2511.19699}.
+
+\bibitem[Chander(2026)]{chander2026map}
+C.~P. Chander.
+\newblock {How {LLMs} Actually Work: A Seven-Layer Map}.
+\newblock Blog post, 19 September 2026, 2026.
+\newblock URL \url{https://cpchander.com/blog/how-llms-work-seven-layer-map}.
+
+\bibitem[Smith(2026)]{smith2026ailayer}
+Logan Smith.
+\newblock {The {AI} Layer Model: a shared map for {AI} systems}.
+\newblock Blog post, 20 October 2026; repository github.com/Logans415/ai-layer-model, 2026.
+\newblock URL \url{https://logansmith.us/post-ai-layer-model.html}.
+
+\bibitem[{Dollhouse Research}()]{ailis}
+{Dollhouse Research}.
+\newblock {{AILIS} ({AI} Layer Interface Specification)}.
+\newblock Website and GitHub repository DollhouseMCP/AILIS.
+\newblock URL \url{https://ailis.dollhouseresearch.com/}.
 \newblock Accessed 9 November 2026.
 
-\bibitem[{ISO/IEC JTC 1/SC 42}(2022{\natexlab{a}})]{iso22989}
-{ISO/IEC JTC 1/SC 42}.
-\newblock {{ISO/IEC} 22989:2022, Information technology -- Artificial intelligence -- Artificial intelligence concepts and terminology}.
-\newblock International Organization for Standardization, 2022{\natexlab{a}}.
-\newblock URL \url{https://www.iso.org/standard/74296.html}.
-
-\bibitem[{ISO/IEC JTC 1/SC 42}(2022{\natexlab{b}})]{iso23053}
-{ISO/IEC JTC 1/SC 42}.
-\newblock {{ISO/IEC} 23053:2022, Framework for Artificial Intelligence ({AI}) Systems Using Machine Learning ({ML})}.
-\newblock International Organization for Standardization, 2022{\natexlab{b}}.
-\newblock URL \url{https://www.iso.org/standard/74438.html}.
-
-\bibitem[{National Institute of Standards and Technology}(2023)]{nist2023airmf}
-{National Institute of Standards and Technology}.
-\newblock {Artificial Intelligence Risk Management Framework ({AI RMF} 1.0)}.
-\newblock Technical Report NIST AI 100-1, NIST, 2023.
-
-\bibitem[{National Institute of Standards and Technology}(2024)]{nist2024genai}
-{National Institute of Standards and Technology}.
-\newblock {Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile}.
-\newblock Technical Report NIST AI 600-1, NIST, 2024.
-
-\bibitem[Bornstein and Radovanovic(2023)]{a16z2023llm}
-Matt Bornstein and Rajko Radovanovic.
-\newblock {Emerging Architectures for {LLM} Applications}.
-\newblock Andreessen Horowitz, 2023.
-\newblock URL \url{https://a16z.com/emerging-architectures-for-llm-applications/}.
-
-\bibitem[{Google Cloud}()]{googlemlops}
-{Google Cloud}.
-\newblock {{MLOps}: Continuous delivery and automation pipelines in machine learning}.
-\newblock Cloud Architecture Center.
-\newblock URL \url{https://cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning}.
+\bibitem[{Localis}()]{localis}
+{Localis}.
+\newblock {{AI OSI} Model}.
+\newblock URL \url{https://localis.services/ai-osi/}.
 \newblock Accessed 9 November 2026.
 
-\bibitem[Kreuzberger et~al.(2022)Kreuzberger, K{\"u}hl, and Hirschl]{kreuzberger2022mlops}
-Dominik Kreuzberger, Niklas K{\"u}hl, and Sebastian Hirschl.
-\newblock Machine learning operations ({MLOps}): Overview, definition, and architecture.
-\newblock \emph{arXiv preprint arXiv:2205.02302}, 2022.
-\newblock URL \url{https://arxiv.org/abs/2205.02302}.
+\bibitem[{\{a\}OS Explorer}()]{aos7}
+{\{a\}OS Explorer}.
+\newblock {The {OSI} Model for {AI}}.
+\newblock URL \url{https://aos7.tech/}.
+\newblock Accessed 9 November 2026.
+
+\bibitem[Shapiro et~al.(2023)Shapiro, Li, Delaflor, and Toxtli]{shapiro2023ace}
+David Shapiro, Wangfan Li, Manuel Delaflor, and Carlos Toxtli.
+\newblock Conceptual framework for autonomous cognitive entities.
+\newblock \emph{arXiv preprint arXiv:2310.06775}, 2023.
+\newblock URL \url{https://arxiv.org/abs/2310.06775}.
 
 \bibitem[Lu et~al.(2023{\natexlab{a}})Lu, Zhu, Xu, Liu, Xing, and Whittle]{lu2023taxonomy}
 Qinghua Lu, Liming Zhu, Xiwei Xu, Yue Liu, Zhenchang Xing, and Jon Whittle.
@@ -168,6 +190,60 @@ Qinghua Lu, Liming Zhu, Xiwei Xu, Zhenchang Xing, Stefan Harrer, and Jon Whittle
 \newblock Towards responsible generative {AI}: A reference architecture for designing foundation model based agents.
 \newblock In \emph{2024 IEEE 21st International Conference on Software Architecture Companion (ICSA-C)}, pages 119--126, 2024.
 \newblock \doi{10.1109/ICSA-C63560.2024.00028}.
+
+\bibitem[Bucaioni et~al.(2025)Bucaioni, Weyssow, He, Lyu, and Lo]{bucaioni2025fra}
+Alessio Bucaioni, Martin Weyssow, Junda He, Yunbo Lyu, and David Lo.
+\newblock A functional software reference architecture for {LLM}-integrated systems.
+\newblock \emph{arXiv preprint arXiv:2501.12904}, 2025.
+\newblock URL \url{https://arxiv.org/abs/2501.12904}.
+
+\bibitem[Lin et~al.(2026)Lin, Pao, Zhan, and Zheng]{lin2026ica}
+Hai Lin, Hoilam Pao, Shaoxiong Zhan, and Hai-Tao Zheng.
+\newblock Model-native computing architecture: Envisioning future system architecture through the lens of computer architecture.
+\newblock \emph{arXiv preprint arXiv:2606.00288}, 2026.
+\newblock URL \url{https://arxiv.org/abs/2606.00288}.
+
+\bibitem[{ISO/IEC JTC 1/SC 42}(2022{\natexlab{a}})]{iso22989}
+{ISO/IEC JTC 1/SC 42}.
+\newblock {{ISO/IEC} 22989:2022, Information technology -- Artificial intelligence -- Artificial intelligence concepts and terminology}.
+\newblock International Organization for Standardization, 2022{\natexlab{a}}.
+\newblock URL \url{https://www.iso.org/standard/74296.html}.
+
+\bibitem[{ISO/IEC JTC 1/SC 42}(2022{\natexlab{b}})]{iso23053}
+{ISO/IEC JTC 1/SC 42}.
+\newblock {{ISO/IEC} 23053:2022, Framework for Artificial Intelligence ({AI}) Systems Using Machine Learning ({ML})}.
+\newblock International Organization for Standardization, 2022{\natexlab{b}}.
+\newblock URL \url{https://www.iso.org/standard/74438.html}.
+
+\bibitem[{National Institute of Standards and Technology}(2023)]{nist2023airmf}
+{National Institute of Standards and Technology}.
+\newblock {Artificial Intelligence Risk Management Framework ({AI RMF} 1.0)}.
+\newblock Technical Report NIST AI 100-1, NIST, 2023.
+\newblock URL \url{https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf}.
+
+\bibitem[{National Institute of Standards and Technology}(2024)]{nist2024genai}
+{National Institute of Standards and Technology}.
+\newblock {Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile}.
+\newblock Technical Report NIST AI 600-1, NIST, 2024.
+
+\bibitem[Bornstein and Radovanovic(2023)]{a16z2023llm}
+Matt Bornstein and Rajko Radovanovic.
+\newblock {Emerging Architectures for {LLM} Applications}.
+\newblock Andreessen Horowitz, 2023.
+\newblock URL \url{https://a16z.com/emerging-architectures-for-llm-applications/}.
+
+\bibitem[{Google Cloud}()]{googlemlops}
+{Google Cloud}.
+\newblock {{MLOps}: Continuous delivery and automation pipelines in machine learning}.
+\newblock Cloud Architecture Center.
+\newblock URL \url{https://docs.cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning}.
+\newblock Accessed 9 November 2026.
+
+\bibitem[Kreuzberger et~al.(2022)Kreuzberger, K{\"u}hl, and Hirschl]{kreuzberger2022mlops}
+Dominik Kreuzberger, Niklas K{\"u}hl, and Sebastian Hirschl.
+\newblock Machine learning operations ({MLOps}): Overview, definition, and architecture.
+\newblock \emph{arXiv preprint arXiv:2205.02302}, 2022.
+\newblock URL \url{https://arxiv.org/abs/2205.02302}.
 
 \bibitem[Agrawal et~al.(2023)Agrawal, Panwar, Mohan, Kwatra, Gulavani, and Ramjee]{agrawal2023sarathi}
 Amey Agrawal, Ashish Panwar, Jayashree Mohan, Nipun Kwatra, Bhargav~S. Gulavani, and Ramachandran Ramjee.
@@ -205,16 +281,10 @@ Vijay~Janapa Reddi, Christine Cheng, David Kanter, Peter Mattson, et~al.
 \newblock \emph{arXiv preprint arXiv:1911.02549}, 2019.
 \newblock URL \url{https://arxiv.org/abs/1911.02549}.
 
-\bibitem[Shapiro et~al.(2023)Shapiro, Li, Delaflor, and Toxtli]{shapiro2023ace}
-David Shapiro, Wangfan Li, Manuel Delaflor, and Carlos Toxtli.
-\newblock Conceptual framework for autonomous cognitive entities.
-\newblock \emph{arXiv preprint arXiv:2310.06775}, 2023.
-\newblock URL \url{https://arxiv.org/abs/2310.06775}.
-
-\bibitem[Rodrigo-Gin{\'e}s(2025)]{rodrigogines2025osi}
-Francisco-Javier Rodrigo-Gin{\'e}s.
-\newblock {Toward an {OSI}-Inspired Stack for Agentic {AI}: From Fragmented Frameworks to Open Standards}.
-\newblock Zenodo, 2025.
+\bibitem[{OWASP GenAI Security Project}(2025)]{owasp2025llm}
+{OWASP GenAI Security Project}.
+\newblock {{OWASP} Top 10 for {LLM} Applications 2025}, 2025.
+\newblock URL \url{https://genai.owasp.org/llm-top-10/}.
 
 \bibitem[{The MITRE Corporation}()]{mitreatlas}
 {The MITRE Corporation}.
@@ -233,10 +303,36 @@ Apostol Vassilev, Alina Oprea, Alie Fordyce, Hyrum Anderson, Xander Davies, and 
 \newblock URL \url{https://saif.google/}.
 \newblock Accessed 9 November 2026.
 
+\bibitem[{vLLM Project}()]{vllmmetrics}
+{vLLM Project}.
+\newblock {Metrics}.
+\newblock vLLM documentation.
+\newblock URL \url{https://docs.vllm.ai/en/latest/usage/metrics.html}.
+\newblock Accessed 9 November 2026.
+
+\bibitem[{NVIDIA}()]{dcgmfields}
+{NVIDIA}.
+\newblock {{DCGM} {API}: Field {IDs}}.
+\newblock Data Center GPU Manager documentation.
+\newblock URL \url{https://docs.nvidia.com/datacenter/dcgm/latest/dcgm-api/dcgm-api-field-ids.html}.
+\newblock Accessed 9 November 2026.
+
 \bibitem[Greshake et~al.(2023)Greshake, Abdelnabi, Mishra, Endres, Holz, and Fritz]{greshake2023indirect}
 Kai Greshake, Sahar Abdelnabi, Shailesh Mishra, Christoph Endres, Thorsten Holz, and Mario Fritz.
 \newblock Not what you've signed up for: Compromising real-world {LLM}-integrated applications with indirect prompt injection.
 \newblock \emph{arXiv preprint arXiv:2302.12173}, 2023.
 \newblock URL \url{https://arxiv.org/abs/2302.12173}.
+
+\bibitem[Morris et~al.(2023)Morris, Kuleshov, Shmatikov, and Rush]{morris2023inversion}
+John~X. Morris, Volodymyr Kuleshov, Vitaly Shmatikov, and Alexander~M. Rush.
+\newblock Text embeddings reveal (almost) as much as text.
+\newblock \emph{arXiv preprint arXiv:2310.06816}, 2023.
+\newblock URL \url{https://arxiv.org/abs/2310.06816}.
+
+\bibitem[Song et~al.(2024)Song, Pang, Wang, Wang, Wang, Chen, Song, Jin, Meng, and Hou]{song2024earlybird}
+Linke Song, Zixuan Pang, Wenhao Wang, Zihao Wang, XiaoFeng Wang, Hongbo Chen, Wei Song, Yier Jin, Dan Meng, and Rui Hou.
+\newblock The early bird catches the leak: Unveiling timing side channels in {LLM} serving systems.
+\newblock \emph{arXiv preprint arXiv:2409.20002}, 2024.
+\newblock URL \url{https://arxiv.org/abs/2409.20002}.
 
 \end{thebibliography}

@@ -1,9 +1,12 @@
-@misc{bhatt2026zenodo,
-  author       = {Bhatt, Divyendu},
-  title        = {{{AOSI-RFC-0001}: The {AI} Open Systems Interconnection ({AOSI}) Reference Model: A 7-Layer Stack for Generative {AI} Execution}},
-  year         = {2026},
-  howpublished = {Zenodo, version 1.2.1},
-  doi          = {10.5281/zenodo.24073122}
+@techreport{bhatt2026dairm,
+  author      = {Bhatt, Divyendu},
+  title       = {{DAIRM-TR-0001}: {DAIRM}: Divyendu's Data-State-Aware {AI} Reference Model for Generative {AI} Inference Systems},
+  institution = {Independent},
+  type        = {Technical Report / Working Draft},
+  number      = {Version 2.0.0},
+  year        = {2026},
+  doi         = {10.5281/zenodo.24073121},
+  note        = {Concept DOI covering all versions; supersedes AOSI v1.2.1, doi:10.5281/zenodo.24073122}
 }
 @misc{iso7498,
   author       = {{ISO/IEC}},
@@ -79,7 +82,8 @@
   institution = {NIST},
   number      = {NIST AI 100-1},
   year        = {2023},
-  doi         = {10.6028/NIST.AI.100-1}
+  doi         = {10.6028/NIST.AI.100-1},
+  url         = {https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf}
 }
 @techreport{nist2024genai,
   author      = {{National Institute of Standards and Technology}},
@@ -108,7 +112,7 @@
   author       = {{Google Cloud}},
   title        = {{{MLOps}: Continuous delivery and automation pipelines in machine learning}},
   howpublished = {Cloud Architecture Center},
-  url          = {https://cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning},
+  url          = {https://docs.cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning},
   note         = {Accessed 9 November 2026}
 }
 @article{kreuzberger2022mlops,
@@ -290,7 +294,111 @@
 }
 @misc{otelgenai,
   author       = {{OpenTelemetry}},
-  title        = {{Semantic Conventions for Generative {AI} Systems}},
-  url          = {https://opentelemetry.io/docs/specs/semconv/gen-ai/},
+  title        = {{Semantic Conventions for Generative {AI}}},
+  howpublished = {GitHub repository open-telemetry/semantic-conventions-genai},
+  url          = {https://github.com/open-telemetry/semantic-conventions-genai},
+  note         = {Accessed 9 November 2026}
+}
+@misc{reilly2025aosi,
+  author       = {Reilly, Shawn},
+  title        = {{{AOSI} Reference Model for Artificial Intelligence ({AOSI} = {AI} Open Systems Interconnection), version 1.0}},
+  year         = {2025},
+  howpublished = {GitHub repository kahalewai/aosi (created 28 December 2025)},
+  url          = {https://github.com/kahalewai/aosi}
+}
+@article{liang2025compute,
+  author  = {Liang, Bor-Sung},
+  title   = {{AI} Compute Architecture and Evolution Trends},
+  journal = {arXiv preprint arXiv:2508.21394},
+  year    = {2025},
+  url     = {https://arxiv.org/abs/2508.21394}
+}
+@article{fleming2025ioa,
+  author  = {Fleming, Charles and Muscariello, Luca and Pandey, Vijoy and Kompella, Ramana},
+  title   = {A Layered Protocol Architecture for the Internet of Agents},
+  journal = {arXiv preprint arXiv:2511.19699},
+  year    = {2025},
+  url     = {https://arxiv.org/abs/2511.19699}
+}
+@misc{huang2025maestro,
+  author       = {Huang, Ken},
+  title        = {{Agentic {AI} Threat Modeling Framework: {MAESTRO}}},
+  year         = {2025},
+  howpublished = {Cloud Security Alliance blog, 6 February 2025},
+  url          = {https://cloudsecurityalliance.org/blog/2025/02/06/agentic-ai-threat-modeling-framework-maestro}
+}
+@misc{chander2026map,
+  author       = {Chander, C. P.},
+  title        = {{How {LLMs} Actually Work: A Seven-Layer Map}},
+  year         = {2026},
+  howpublished = {Blog post, 19 September 2026},
+  url          = {https://cpchander.com/blog/how-llms-work-seven-layer-map}
+}
+@misc{smith2026ailayer,
+  author       = {Smith, Logan},
+  title        = {{The {AI} Layer Model: a shared map for {AI} systems}},
+  year         = {2026},
+  howpublished = {Blog post, 20 October 2026; repository github.com/Logans415/ai-layer-model},
+  url          = {https://logansmith.us/post-ai-layer-model.html}
+}
+@misc{ailis,
+  author       = {{Dollhouse Research}},
+  title        = {{{AILIS} ({AI} Layer Interface Specification)}},
+  howpublished = {Website and GitHub repository DollhouseMCP/AILIS},
+  url          = {https://ailis.dollhouseresearch.com/},
+  note         = {Accessed 9 November 2026}
+}
+@misc{localis,
+  author       = {{Localis}},
+  title        = {{{AI OSI} Model}},
+  url          = {https://localis.services/ai-osi/},
+  note         = {Accessed 9 November 2026}
+}
+@misc{aos7,
+  author       = {{\{a\}OS Explorer}},
+  title        = {{The {OSI} Model for {AI}}},
+  url          = {https://aos7.tech/},
+  note         = {Accessed 9 November 2026}
+}
+@article{bucaioni2025fra,
+  author  = {Bucaioni, Alessio and Weyssow, Martin and He, Junda and Lyu, Yunbo and Lo, David},
+  title   = {A Functional Software Reference Architecture for {LLM}-Integrated Systems},
+  journal = {arXiv preprint arXiv:2501.12904},
+  year    = {2025},
+  url     = {https://arxiv.org/abs/2501.12904}
+}
+@article{lin2026ica,
+  author  = {Lin, Hai and Pao, Hoilam and Zhan, Shaoxiong and Zheng, Hai-Tao},
+  title   = {Model-Native Computing Architecture: Envisioning Future System Architecture Through the Lens of Computer Architecture},
+  journal = {arXiv preprint arXiv:2606.00288},
+  year    = {2026},
+  url     = {https://arxiv.org/abs/2606.00288}
+}
+@article{morris2023inversion,
+  author  = {Morris, John X. and Kuleshov, Volodymyr and Shmatikov, Vitaly and Rush, Alexander M.},
+  title   = {Text Embeddings Reveal (Almost) As Much As Text},
+  journal = {arXiv preprint arXiv:2310.06816},
+  year    = {2023},
+  url     = {https://arxiv.org/abs/2310.06816}
+}
+@article{song2024earlybird,
+  author  = {Song, Linke and Pang, Zixuan and Wang, Wenhao and Wang, Zihao and Wang, XiaoFeng and Chen, Hongbo and Song, Wei and Jin, Yier and Meng, Dan and Hou, Rui},
+  title   = {The Early Bird Catches the Leak: Unveiling Timing Side Channels in {LLM} Serving Systems},
+  journal = {arXiv preprint arXiv:2409.20002},
+  year    = {2024},
+  url     = {https://arxiv.org/abs/2409.20002}
+}
+@misc{vllmmetrics,
+  author       = {{vLLM Project}},
+  title        = {{Metrics}},
+  howpublished = {vLLM documentation},
+  url          = {https://docs.vllm.ai/en/latest/usage/metrics.html},
+  note         = {Accessed 9 November 2026}
+}
+@misc{dcgmfields,
+  author       = {{NVIDIA}},
+  title        = {{{DCGM} {API}: Field {IDs}}},
+  howpublished = {Data Center GPU Manager documentation},
+  url          = {https://docs.nvidia.com/datacenter/dcgm/latest/dcgm-api/dcgm-api-field-ids.html},
   note         = {Accessed 9 November 2026}
 }
