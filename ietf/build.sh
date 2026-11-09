@@ -3,7 +3,7 @@
 # Requires: kramdown-rfc (Ruby gem) and xml2rfc (Python package) on PATH.
 set -euo pipefail
 cd "$(dirname "$0")"
-DRAFT=draft-bhatt-aosi-reference-model
+DRAFT=draft-bhatt-dairm
 REV=00
 OUT="${DRAFT}-${REV}"
 
