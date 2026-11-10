@@ -1,6 +1,6 @@
 %% DAIRM v2.0.0 overview (source for the README figure). CC-BY-4.0, (c) 2026 Divyendu Bhatt.
 flowchart TB
-    subgraph RP["Request path (every request crosses every layer)"]
+    subgraph RP["Request path (every request that reaches model execution crosses every layer)"]
         direction TB
         L6["L6 Application<br/>client, UX, streaming render"]
         L5["L5 Orchestration & Gateway<br/>auth, policy, guardrails, templating, routing, agent loop"]
@@ -8,11 +8,11 @@ flowchart TB
         L3["L3 Model Execution Runtime<br/>executes the model graph: framework, attention kernels, collectives"]
         L2["L2 Device & Driver<br/>driver, allocator, kernel launch, streams"]
         L1["L1 Physical Compute & Interconnect<br/>accelerator, HBM, NVLink/IB, power, thermals"]
-        L6 -->|"request payload"| L5
-        L5 -->|"enriched prompt"| L4
-        L4 -->|"token-ID batch + KV block table"| L3
-        L3 -->|"kernel launch stream"| L2
-        L2 -->|"device instruction & memory-transaction stream"| L1
+        L6 -->|"request payload (per request)"| L5
+        L5 -->|"enriched prompt (per request)"| L4
+        L4 -->|"token-ID batch + KV block table (per step)"| L3
+        L3 -->|"kernel launch stream (per step)"| L2
+        L2 -->|"device instruction & memory-transaction stream (per device)"| L1
     end
     CTX["Context Services plane<br/>retrieval/RAG, vector stores, rerankers,<br/>tools/MCP, memory, semantic caches, web search"]
     BUILD["Build/Deploy plane<br/>weights, architecture/config, tokenizer & chat template,<br/>compiled graph / kernel IR, engine plans"]

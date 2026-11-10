@@ -1,33 +1,33 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="724" viewBox="0 0 1080 724" font-family="Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="746" viewBox="0 0 1080 746" font-family="Helvetica, Arial, sans-serif">
 <defs><marker id="a" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#444"/></marker><marker id="b" markerWidth="10" markerHeight="8" refX="1" refY="4" orient="auto"><path d="M10,0 L0,4 L10,8 z" fill="#444"/></marker></defs>
-<rect width="1080" height="724" fill="#ffffff"/>
+<rect width="1080" height="746" fill="#ffffff"/>
 <text x="540.0" y="34" font-size="20" font-weight="bold" fill="#1d1d1f" text-anchor="middle">DAIRM v2.0.0: request path, boundary data states and planes</text>
 <text x="540.0" y="60" font-size="13" font-weight="normal" fill="#555" text-anchor="middle">Divyendu's Data-State-Aware AI Reference Model for Generative AI Inference Systems</text>
 <rect x="40" y="92" width="560" height="62" rx="6" fill="#3B4A6B"/>
 <text x="54" y="118" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="start">L6  Application</text>
 <text x="54" y="140" font-size="12.5" font-weight="normal" fill="#f2f2f2" text-anchor="start">client, UX, streaming render</text>
 <line x1="80" y1="156" x2="80" y2="185" stroke="#444" stroke-width="2" marker-end="url(#a)"/>
-<text x="94" y="176.0" font-size="13" font-weight="bold" fill="#222" text-anchor="start">request payload</text>
+<text x="94" y="176.0" font-size="13" font-weight="bold" fill="#222">request payload<tspan font-weight="normal" fill="#666">  (per request)</tspan></text>
 <rect x="40" y="188" width="560" height="62" rx="6" fill="#2F6DB5"/>
 <text x="54" y="214" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="start">L5  Orchestration &amp; Gateway</text>
 <text x="54" y="236" font-size="12.5" font-weight="normal" fill="#f2f2f2" text-anchor="start">auth, policy, guardrails, templating, routing, agent loop</text>
 <line x1="80" y1="252" x2="80" y2="281" stroke="#444" stroke-width="2" marker-end="url(#a)"/>
-<text x="94" y="272.0" font-size="13" font-weight="bold" fill="#222" text-anchor="start">enriched prompt</text>
+<text x="94" y="272.0" font-size="13" font-weight="bold" fill="#222">enriched prompt<tspan font-weight="normal" fill="#666">  (per request)</tspan></text>
 <rect x="40" y="284" width="560" height="62" rx="6" fill="#4E9F3D"/>
 <text x="54" y="310" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="start">L4  Serving Engine</text>
 <text x="54" y="332" font-size="12.5" font-weight="normal" fill="#f2f2f2" text-anchor="start">admission, scheduling, batching, KV cache, tokenization, sampling</text>
 <line x1="80" y1="348" x2="80" y2="377" stroke="#444" stroke-width="2" marker-end="url(#a)"/>
-<text x="94" y="368.0" font-size="13" font-weight="bold" fill="#222" text-anchor="start">token-ID batch + KV-cache block table</text>
+<text x="94" y="368.0" font-size="13" font-weight="bold" fill="#222">token-ID batch + KV-cache block table<tspan font-weight="normal" fill="#666">  (per scheduler step)</tspan></text>
 <rect x="40" y="380" width="560" height="62" rx="6" fill="#C98A14"/>
 <text x="54" y="406" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="start">L3  Model Execution Runtime</text>
 <text x="54" y="428" font-size="12.5" font-weight="normal" fill="#f2f2f2" text-anchor="start">executes the model graph: framework, kernels, collectives</text>
 <line x1="80" y1="444" x2="80" y2="473" stroke="#444" stroke-width="2" marker-end="url(#a)"/>
-<text x="94" y="464.0" font-size="13" font-weight="bold" fill="#222" text-anchor="start">kernel launch stream</text>
+<text x="94" y="464.0" font-size="13" font-weight="bold" fill="#222">kernel launch stream<tspan font-weight="normal" fill="#666">  (per scheduler step)</tspan></text>
 <rect x="40" y="476" width="560" height="62" rx="6" fill="#D9692B"/>
 <text x="54" y="502" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="start">L2  Device &amp; Driver</text>
 <text x="54" y="524" font-size="12.5" font-weight="normal" fill="#f2f2f2" text-anchor="start">driver, allocator, kernel launch, streams</text>
 <line x1="80" y1="540" x2="80" y2="569" stroke="#444" stroke-width="2" marker-end="url(#a)"/>
-<text x="94" y="560.0" font-size="13" font-weight="bold" fill="#222" text-anchor="start">device instruction &amp; memory-transaction stream</text>
+<text x="94" y="560.0" font-size="13" font-weight="bold" fill="#222">device instruction &amp; memory-transaction stream<tspan font-weight="normal" fill="#666">  (per device)</tspan></text>
 <rect x="40" y="572" width="560" height="62" rx="6" fill="#C0392B"/>
 <text x="54" y="598" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="start">L1  Physical Compute &amp; Interconnect</text>
 <text x="54" y="620" font-size="12.5" font-weight="normal" fill="#f2f2f2" text-anchor="start">accelerator, HBM, NVLink/IB, power, thermals</text>
@@ -51,6 +51,7 @@
 <text x="720" y="370.0" font-size="11.5" font-weight="normal" fill="#7A5BA6" text-anchor="end">model artifact</text>
 <line x1="748" y1="556.0" x2="604" y2="556.0" stroke="#6B7785" stroke-width="2" stroke-dasharray="2,4"/>
 <text x="40" y="668" font-size="13" font-weight="normal" fill="#333" text-anchor="start">Up-path: logits -&gt; sampled token IDs -&gt; detokenized text deltas -&gt; streamed response chunks.</text>
-<text x="40" y="690" font-size="12" font-weight="normal" fill="#555" text-anchor="start">Activations and the KV cache are resident device-memory state; artifacts are not per-request data.</text>
-<text x="1060" y="712" font-size="10" font-weight="normal" fill="#888" text-anchor="end">CC-BY-4.0  (c) 2026 Divyendu Bhatt  |  generated by assets/build_overview.py</text>
+<text x="40" y="690" font-size="12" font-weight="normal" fill="#555" text-anchor="start">Step- and device-scoped states are joined to requests by dairm.l4.step_id and dairm.device_id.</text>
+<text x="40" y="712" font-size="12" font-weight="normal" fill="#555" text-anchor="start">Activations and the KV cache are resident device-memory state; artifacts are not per-request data.</text>
+<text x="1060" y="734" font-size="10" font-weight="normal" fill="#888" text-anchor="end">CC-BY-4.0  (c) 2026 Divyendu Bhatt  |  generated by assets/build_overview.py</text>
 </svg>

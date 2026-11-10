@@ -33,7 +33,7 @@ informative:
       DOI: 10.5281/zenodo.24073121
     target: https://github.com/CodingThrill0012/dairm
   AOSI-V121:
-    title: "AOSI Reference Model, Version 1.2.1 (superseded by DAIRM-TR-0001 Version 2.0.0)"
+    title: "AOSI-RFC-0001: The AI Open Systems Interconnection (AOSI) Reference Model: A 7-Layer Stack for Generative AI Execution, Version 1.2.1 (superseded by DAIRM-TR-0001 Version 2.0.0; 'RFC' was a project label, not an IETF RFC)"
     author:
       fullname: Divyendu Bhatt
     date: 2026-11-09
@@ -227,11 +227,44 @@ informative:
     date: 2026-10-20
     target: https://logansmith.us/post-ai-layer-model.html
   AILIS:
-    title: "AILIS: AI Layer Interface Specification"
+    title: "AILIS: A Proposed Layer Model for AI Systems, Version 0.2.0"
     author:
+      fullname: Mick Darling
       org: Dollhouse Research
-    date: false
+    date: 2025
     target: https://ailis.dollhouseresearch.com/
+  TSAIH:
+    title: "The AI Tech-Stack Model"
+    author:
+      -
+        fullname: Rua-Huan Tsaih
+      -
+        fullname: Hsin-Lu Chang
+      -
+        fullname: Chih-Chun Hsu
+      -
+        fullname: David C. Yen
+    date: 2023-03
+    seriesinfo:
+      DOI: 10.1145/3568026
+      "Communications of the ACM": "66(3), 69-77"
+  ZHANG-LAYERED:
+    title: "A Layered Architecture for Developing and Enhancing Capabilities in Large Language Model-based Software Systems"
+    author:
+      -
+        fullname: Dawen Zhang
+      -
+        fullname: Xiwei Xu
+      -
+        fullname: Chen Wang
+      -
+        fullname: Zhenchang Xing
+      -
+        fullname: Robert Mao
+    date: 2024-11
+    seriesinfo:
+      arXiv: "2411.12357"
+    target: https://arxiv.org/abs/2411.12357
   BUCAIONI:
     title: "A Functional Software Reference Architecture for LLM-Integrated Systems"
     author:
@@ -353,7 +386,7 @@ problems:
    which a threat materializes.
 
 4. Non-transferable expertise: engineers lack a common frame for
-   saying where a behaviour originates, which slows incident response
+   saying where a behavior originates, which slows incident response
    and design review.
 
 ## Contributions
@@ -367,9 +400,12 @@ OSI analogy as new ({{related}}).  Its contributions are limited to
 three items:
 
 1. A named, observable data state at every boundary of the inference
-   request path ({{states}}).  Each state exists per request and can
-   be captured or measured, which makes each boundary a checkpoint
-   for attributing cause.
+   request path ({{states}}).  Each state can be captured or
+   measured.  Above the serving engine a state is scoped to one
+   request; from the serving engine down, where batching mixes
+   requests, it is scoped to one scheduler step or device and is
+   joined to its requests through a step identifier.  This makes
+   each boundary a checkpoint for attributing cause.
 
 2. A boundary-attributed latency diagnostic method ({{diag}}) that
    separates context-service delay, serving-engine queueing or
@@ -424,7 +460,9 @@ system contains when it is called "DAIRM-aligned".
 
 Layer (Ln):
 : A tier of the request path, from L1 (closest to hardware) to L6
-  (closest to the user).  Every request passes through every layer.
+  (closest to the user).  Every request that reaches model execution
+  passes through every layer; a request answered from a cache or
+  rejected at L5 stops early.
 
 Plane:
 : A set of functions beside the request path.  Planes are called by,
@@ -438,7 +476,12 @@ Boundary:
 
 Data state:
 : The representation of a request or response as it crosses a
-  boundary.  It exists per request and can be captured or measured.
+  boundary.  It can be captured or measured at a stated scope: per
+  request (L6/L5, CTX/L5, L5/L4, and the up-path), per scheduler step
+  (L4/L3 and L3/L2), or per device and sampling interval (L2/L1).
+  Step- and device-scoped states are shared by the requests batched
+  together and are joined to them by "dairm.l4.step_id" and
+  "dairm.device_id".
 
 Resident state:
 : Per-request state held in device memory across steps rather than
@@ -461,8 +504,9 @@ Prefill:
 
 Decode:
 : The forward passes after prefill, one token per step (or several
-  with speculative decoding).  Typically memory-bandwidth-bound at
-  small batch sizes.
+  with speculative decoding).  Usually memory-bandwidth-bound at the
+  batch sizes common in serving, because each step reads the weights
+  and the KV cache for little arithmetic {{ROOFLINE}}.
 
 KV cache:
 : Per-sequence storage of attention keys and values for prior tokens,
@@ -473,8 +517,10 @@ TTFT:
   delivered to the client.
 
 TPOT and ITL:
-: Time per output token and inter-token latency: the intervals
-  between successive output tokens.
+: Time per output token (TPOT) is the mean decode time per output
+  token of one request, (E2E - TTFT) / (N_out - 1).  Inter-token
+  latency (ITL) is the distribution of individual gaps between
+  successive output tokens, which exposes stalls that a mean hides.
 
 Goodput:
 : Throughput of requests that meet their latency objectives.
@@ -495,12 +541,14 @@ P1 Single responsibility per layer:
   once for each layer it occupies.
 
 P2 Named, observable data state at every boundary:
-: Every boundary has a defined data state that exists per request
-  and can be captured, inspected, or measured.  Metaphors and
-  build-time artifacts do not qualify.
+: Every boundary has a defined data state that can be captured,
+  inspected, or measured, per request or, where the serving engine
+  batches requests, per scheduler step or device, and that can be
+  joined to the requests it served.  Metaphors and build-time
+  artifacts do not qualify.
 
 P3 Adjacency of interfaces:
-: A layer interacts with its immediate neighbours and with the
+: A layer interacts with its immediate neighbors and with the
   planes.  Any other shortcut (for example, an application pinning a
   device, or orchestration pre-tokenizing for budgeting) is
   documented as an explicit cross-layer coupling.
@@ -521,7 +569,7 @@ P6 Where cost and latency sit:
 
 P7 Security at the point of materialization:
 : Controls are placed at the layer or plane where a threat
-  materializes, with defence in depth elsewhere where justified.
+  materializes, with defense in depth elsewhere where justified.
 
 # Architecture Overview {#arch}
 
@@ -579,41 +627,53 @@ capping).
 
 ## Boundary Data States {#states}
 
-This is the core of DAIRM.  Each state exists per request and can be
-captured or measured.  The value in parentheses is the proposed
-"dairm.data_state" attribute value ({{attrs}}).
+This is the core of DAIRM.  Each state can be captured or measured
+at the scope given below.  Request-scoped states belong to one
+request.  Step-scoped states (L4/L3 and L3/L2) describe one scheduler
+iteration that serves every request in the batch, and the
+device-scoped state (L2/L1) is sampled per device and interval; both
+are joined to requests through "dairm.l4.step_id" and
+"dairm.device_id".  Caches can end the path early: a gateway
+response cache answers at L5, and a prefix-cache hit at L4 skips
+part of prefill, so not every request produces every state.  The
+value in parentheses is the proposed "dairm.data_state" attribute
+value ({{attrs}}).
 
 L6 -> L5: Request payload ("request_payload"):
 : JSON or HTTP request with messages, tools, sampling parameters, and
-  stream flag.  Observable as request body, size, and schema
-  validity.
+  stream flag.  Scope: request.  Observable as request body, size,
+  and schema validity.
 
 CTX -> L5: Retrieved passages ("retrieved_passages"):
 : Text with scores and provenance, or tool results.  The query
-  embedding stays inside the context service.  Observable as passage
-  count, tokens contributed, and source identifiers.
+  embedding stays inside the context service.  Scope: request.
+  Observable as passage count, tokens contributed, and source
+  identifiers.
 
 L5 -> L4: Enriched prompt ("enriched_prompt"):
 : Templated messages or text, tool schemas, sampling parameters, and
-  priority.  Observable as prompt tokens after enrichment.
+  priority.  Scope: request.  Observable as prompt tokens after
+  enrichment.
 
 L4 -> L3: Token-ID batch + block table ("token_batch"):
-: The scheduled batch plus its KV-cache block table: token IDs, positions, and sequence-to-block
-  mappings.  Observable as batch size, tokens per step, and KV blocks
-  used.
+: The scheduled batch plus its KV-cache block table: token IDs,
+  positions, and sequence-to-block mappings.  Scope: scheduler step.
+  Observable as batch size, tokens per step, and KV blocks used.
 
 L3 -> L2: Kernel launch stream ("kernel_stream"):
-: Operator and kernel invocations with tensor arguments.  Observable
-  as kernel traces and launch counts.
+: Operator and kernel invocations with tensor arguments.  Scope:
+  scheduler step.  Observable as kernel traces and launch counts.
 
-L2 -> L1: Device instruction stream ("device_counters"):
-: The device instruction and memory-transaction stream.  Observable only through hardware counters: compute and tensor-pipe
-  activity, device-memory bytes, and link bytes.
+L2 -> L1: Device instruction stream ("device_stream"):
+: The device instruction and memory-transaction stream.  Scope:
+  device, per sampling interval.  Observable only through hardware
+  counters: compute and tensor-pipe activity, device-memory bytes,
+  and link bytes.
 
 Up-path: Token stream ("token_stream"):
 : Logits, then sampled token IDs, then detokenized text deltas, then
-  streamed response chunks.  Observable as inter-token latency and
-  stream events.
+  streamed response chunks.  Scope: request.  Observable as
+  inter-token latency and stream events.
 
 Resident state:
 : Hidden states (activations) and the KV cache are resident
@@ -632,9 +692,13 @@ measurable size that propagates downward: enriched-prompt tokens at
 L5/L4 determine prefill work below, passages contributed at CTX/L5
 determine part of that count, and batch composition at L4/L3
 determines the arithmetic intensity seen at L1.  Second, each is a
-checkpoint for blame: if the state entering a layer is unchanged and
-the span of that layer grew, that layer is implicated; if the
-incoming state changed, the layer above is implicated ({{triage}}).
+checkpoint for blame, used as a heuristic rather than a rule: if the
+state entering a layer is unchanged and the span of that layer grew,
+that layer is the first suspect; if the incoming state changed, the
+layer above is suspected.  Contention from co-located work, or a
+degraded lower layer, can lengthen a span while its input stays the
+same, so the heuristic is always followed by lower-layer checks and
+an isolation test ({{triage}}).
 
 ## Planes {#planes}
 
@@ -846,7 +910,7 @@ Observability:
 
 Failure modes:
 : Driver and runtime version incompatibility; out-of-memory despite
-  free capacity (fragmentation); device resets; noisy neighbours
+  free capacity (fragmentation); device resets; noisy neighbors
   under partitioning.
 
 ## L1 Physical Compute and Interconnect
@@ -871,8 +935,9 @@ Observability:
   names, so implementers pin the version when relying on exact names.
 
 Failure modes:
-: Memory-bandwidth-bound decode; thermal or power capping reducing
-  clocks; link degradation; memory errors and hardware faults;
+: Memory bandwidth usually bounds decode speed {{ROOFLINE}}; that is
+  a property of the workload, not a fault.  Faults include thermal or
+  power capping reducing clocks; link degradation; memory errors and hardware faults;
   capacity exhaustion forcing offload to slower tiers.
 
 ## Context Services Plane (CTX) {#ctx}
@@ -880,7 +945,7 @@ Failure modes:
 Purpose and scope:
 : Supplies context and capabilities to L5 by call and return:
   retrieval-augmented generation, vector stores and approximate
-  nearest-neighbour indexes, embedding models and rerankers, tools,
+  nearest-neighbor indexes, embedding models and rerankers, tools,
   memory stores, semantic caches, and web search.  Index construction
   belongs to the data pipeline and is referenced only at its
   interface.
@@ -957,9 +1022,9 @@ Up the path:
 
 9. For each further token, L4 schedules a decode iteration and L3 runs
    a one-token forward pass that reads the weights and the KV cache
-   from device memory.  At typical batch sizes decode is
-   memory-bandwidth-bound {{ROOFLINE}}, so TPOT depends largely on L4
-   batching and KV behaviour, L3 attention-kernel cost (which grows
+   from device memory.  At the batch sizes common in serving, decode
+   is usually memory-bandwidth-bound {{ROOFLINE}}, so TPOT depends
+   largely on L4 batching and KV behavior, L3 attention-kernel cost (which grows
    with context), and L1 memory bandwidth.
 
 10. At completion, L4 frees or retains KV blocks for prefix reuse, L5
@@ -979,11 +1044,12 @@ DAIRM-aligned deployment:
 
 2. tags every span with "dairm.layer" or "dairm.plane" and with
    "dairm.data_state" ({{attrs}}), alongside the OpenTelemetry
-   generative AI attributes such as model name and token usage
-   {{OTEL-GENAI}};
+   generative AI attributes such as "gen_ai.operation.name", model
+   name, and token usage {{OTEL-GENAI}} (those conventions are at
+   Development stability);
 
 3. exports L4 engine metrics and L1 device metrics on a common time
-   base, labelled with node, device, and replica identifiers, so that
+   base, labeled with node, device, and replica identifiers, so that
    spans can be joined to device telemetry; and
 
 4. captures L3 profiles on demand for representative requests.
@@ -1039,30 +1105,32 @@ L4 KV-cache pressure:
   gaps; KV usage is near capacity and preemption counts rise.
   Isolation test: replay with lower concurrency or a larger KV
   budget.  If the spikes disappear, L4 is implicated.  Remediate in
-  L4 (prefix caching, KV quantization, admission limits, chunked
-  prefill, disaggregation, more replicas).
+  L4 (prefix caching, KV quantization, admission limits, a larger KV
+  budget, more replicas).  Chunked prefill and disaggregation address
+  prefill interference, not KV capacity.
 
 Memory-bandwidth-bound decode:
 : TPOT rises smoothly with batch size and context length; the L4
   decode span grows uniformly per step without extra queueing;
   device-memory utilization stays high during decode while tensor-pipe
-  utilization is comparatively low.  Isolation test: a fixed-batch
-  sweep of context length or batch size.  If TPOT scales roughly with
-  bytes read per step while memory utilization stays high, the result
+  utilization is comparatively low.  Isolation test: sweep context
+  length at a fixed batch size, and batch size at a fixed context
+  length.  If TPOT tracks bytes read per step while memory
+  utilization stays high, the result
   is consistent with memory-bandwidth-bound decode.  Remediate through
   BUILD or L4 (weight or KV quantization, speculative decoding) or
   MGMT (scale-out).
 
 The third case is deliberately hedged.  TPOT growth with context
 length is also caused by attention-kernel cost at L3 and by KV reads,
-so the sweep shows behaviour consistent with memory-bandwidth-bound
+so the sweeps show behavior consistent with memory-bandwidth-bound
 decode; it does not by itself prove an L1 fault.  High memory
 bandwidth use during decode is usually a property of the arithmetic
 intensity of the workload, not a hardware defect.
 
 ## Troubleshooting Patterns
 
-The technical report {{DAIRM-TR-0001}} contains a seventeen-row
+The technical report {{DAIRM-TR-0001}} contains a sixteen-row
 troubleshooting matrix.  Representative entries, written as symptom,
 then suspected location, then isolation test:
 
@@ -1100,7 +1168,8 @@ then suspected location, then isolation test:
   decode step for host-side launch gaps.
 
 * TPOT rises smoothly with batch and context: L1 (workload property)
-  or L3.  Fixed-batch context sweep ({{discrim}}).
+  or L3.  Context sweep at fixed batch and batch sweep at fixed
+  context ({{discrim}}).
 
 * Throughput drops after sustained load: L1.  Correlate the drop
   with clock-event reasons, power, and temperature.
@@ -1124,8 +1193,11 @@ Attribute top-down, confirm bottom-up:
 
 4. Check the boundary data state entering the candidate (prompt
    tokens at L5/L4, passages and tokens contributed at CTX/L5, batch
-   size at L4/L3).  If the incoming state changed, the layer above is
-   implicated, even if the time is spent below.
+   size at L4/L3).  As a heuristic, not a rule: if the incoming
+   state changed, suspect the layer above, even if the time is spent
+   below; if it did not, suspect the candidate.  Contention or a
+   degraded lower layer can lengthen a span with an unchanged input,
+   so steps 5 to 7 always follow.
 
 5. Correlate with lower-layer telemetry (L4 metrics, L3 profiles, L2
    and L1 counters), joined on time, replica, node, and device.
@@ -1145,8 +1217,15 @@ Attribute top-down, confirm bottom-up:
 
 The following attributes are proposed for community review.  They
 are designed to complement, not replace, the OpenTelemetry semantic
-conventions for generative AI {{OTEL-GENAI}}.  This document does not
-register them anywhere ({{iana}}).
+conventions for generative AI {{OTEL-GENAI}}, which are at
+Development stability and may change.  Where those conventions
+already define an attribute or metric (for example
+"gen_ai.operation.name" with values such as "retrieval" and
+"execute_tool", or the "gen_ai.server.time_to_first_token" and
+"gen_ai.server.time_per_output_token" metrics), it takes precedence,
+and "dairm.*" adds only layer, plane, data state, and join keys.
+Durations are in seconds, following OpenTelemetry practice.  This
+document does not register these attributes anywhere ({{iana}}).
 
 "dairm.layer" (integer, 1 to 6):
 : Layer to which a request-path span is attributed.
@@ -1157,7 +1236,7 @@ register them anywhere ({{iana}}).
 
 "dairm.data_state" (string):
 : One of "request_payload", "retrieved_passages", "enriched_prompt",
-  "token_batch", "kernel_stream", "device_counters", or
+  "token_batch", "kernel_stream", "device_stream", or
   "token_stream" ({{states}}).
 
 "dairm.l5.prompt_tokens_enriched" (integer):
@@ -1171,6 +1250,8 @@ register them anywhere ({{iana}}).
 
 "dairm.ctx.service" (string):
 : One of "retrieval", "tool", "memory", "cache", or "search".
+  Optional where "gen_ai.operation.name" already identifies the
+  operation.
 
 "dairm.ctx.top_k" (integer):
 : Passages requested.
@@ -1181,8 +1262,14 @@ register them anywhere ({{iana}}).
 "dairm.ctx.tokens_contributed" (integer):
 : Tokens the returned passages add to the prompt.
 
-"dairm.l4.queue_time_ms" (double):
+"dairm.l4.queue_time" (double, seconds):
 : Time from admission request to first scheduling.
+
+"dairm.l4.step_id" (string):
+: Identifier of a scheduler step (iteration).  Recorded on the L4
+  spans of each request for the steps it took part in, and on
+  step-scoped records, so that step- and device-scoped states can be
+  joined to requests.
 
 "dairm.l4.prefix_cache_hit_tokens" (integer):
 : Prompt tokens served from the prefix cache.
@@ -1244,7 +1331,7 @@ Reilly, AOSI {{REILLY-AOSI}}:
 : Seven layers (Infrastructure, Model, Data, Orchestration,
   Communication, Interface, Application).  Same former name and OSI
   framing with different layers.  It states what each layer provides
-  to the one above but defines no per-request boundary data states or
+  to the one above but defines no boundary data states or
   diagnostic method.
 
 Liang {{LIANG}}:
@@ -1265,12 +1352,12 @@ Fleming et al. {{IOA-LAYERS}}:
   communication is outside the scope of DAIRM.
 
 CSA MAESTRO {{MAESTRO}}:
-: A seven-layer threat-modelling framework for agentic AI.  Per-layer
+: A seven-layer threat-modeling framework for agentic AI.  Per-layer
   threat mapping predates DAIRM; the security mapping in this
   document is content, not a novelty claim.
 
 Chander {{CHANDER}}:
-: Seven OSI-modelled layers for how language models work, including
+: Seven OSI-modeled layers for how language models work, including
   data and training.  It places retrieval inside orchestration and
   argues that training and serving need separate views; DAIRM adopts
   both points (the CTX and BUILD planes).
@@ -1278,12 +1365,13 @@ Chander {{CHANDER}}:
 Smith, AI Layer Model {{AI-LAYER-MODEL}}:
 : Nine layers in Substrate, Cognition, and Systems planes; an
   OSI-inspired responsibility map for placing AI components, without
-  per-request boundary states or latency diagnostics.
+  boundary states or latency diagnostics.
 
-AILIS {{AILIS}}:
+Darling, AILIS v0.2.0 {{AILIS}}:
 : A vocabulary of sixteen or more layers from facilities to
-  application; finer-grained than DAIRM, which is limited to the
-  inference request path and adds boundary states and diagnostics.
+  application.  It asks adopters to name the hand-offs between
+  layers but defines none itself.  DAIRM is narrower (the inference
+  request path) and defines boundary states and diagnostics.
 
 Shapiro et al., ACE {{ACE}}:
 : A six-layer cognitive architecture for autonomous agents; it layers
@@ -1293,6 +1381,16 @@ Bucaioni et al. {{BUCAIONI}}:
 : A functional software reference architecture for LLM-integrated
   systems, validated on open-source systems; DAIRM has not yet reached
   a comparable level of validation.
+
+Zhang et al. {{ZHANG-LAYERED}}:
+: Model, inference, and application layers of LLM-based software,
+  with desired capabilities mapped to layers; a design-time view
+  without per-boundary data states or latency attribution.
+
+Tsaih et al. {{TSAIH}}:
+: An AI tech-stack model for the management and technology
+  challenges of AI-enabled application projects; an organizational
+  view of the stack rather than a request-path model.
 
 ## Standards, Industry Stacks, and Security Frameworks
 
@@ -1330,7 +1428,14 @@ as a location index for mapping them ({{security}}).
 DAIRM is a single-author, informational model.  It has not been
 adopted by ISO/IEC, ITU-T, the IETF, NIST, or any other body.  The
 boundaries and discriminating signals are argued from mechanism and
-the cited literature and have not been validated empirically.
+the cited literature.  The only measurement so far is a small
+CPU-only study in the technical report {{DAIRM-TR-0001}} (Section
+7.6): an automated encoding of the triage procedure ({{triage}})
+attributed 12 of 12 injected single faults (at CTX, L5, L4, and the
+execution hardware) to the location where they were injected, with
+no false attributions in 3 no-fault controls, on one small model and
+one machine.  It did not test the KV-pressure or memory-bandwidth
+discriminators ({{discrim}}), which need accelerator counters.
 Training is out of scope.  Counter-examples, missed prior art, and
 evidence for or against each claim are welcome.
 
@@ -1374,7 +1479,7 @@ Version 1.2.1 reserved "Layer 8" and "Layer 9" above the stack.
 These were removed in version 2.0.0 because Fleming et al. had
 already proposed L8 and L9 agent layers above OSI {{IOA-LAYERS}}, and
 reusing those numbers would cause confusion.  Agentic workflows are
-modelled inside L5 and CTX instead.  Planned work:
+modeled inside L5 and CTX instead.  Planned work:
 
 1. Agent traces: model multi-step agent executions as repeated passes
    through the request path, with nested L5 spans per step, tool
@@ -1389,18 +1494,20 @@ modelled inside L5 and CTX instead.  Planned work:
 
 4. Cross-layer efficiency metrics, such as energy per output token.
 
-5. An empirical case study: an open-source serving engine with a
-   retrieval service and traces tagged with "dairm.layer", with
-   injected faults (slow retrieval, KV-cache pressure,
-   bandwidth-bound decode), measuring whether {{discrim}} attributes
-   each fault correctly.
+5. An empirical case study on accelerators: an open-source serving
+   engine with a retrieval service, device counters, and traces
+   tagged with "dairm.layer", with injected faults (slow retrieval,
+   KV-cache pressure, bandwidth-bound decode), measuring whether
+   {{discrim}} attributes each fault correctly.  A small CPU-only
+   study of the triage procedure is reported in the technical
+   report.
 
 # Security Considerations {#security}
 
 This document defines a reference model, not a protocol, and
 introduces no new protocol mechanism.  Under principle P7, DAIRM
 places each threat at the layer or plane where it materializes;
-controls elsewhere provide defence in depth.  The mapping below is
+controls elsewhere provide defense in depth.  The mapping below is
 the author's and is offered as content, not as a novelty claim.
 
 L6:

@@ -1,4 +1,4 @@
-\begin{thebibliography}{55}
+\begin{thebibliography}{57}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -80,13 +80,13 @@ Shawn Reilly.
 \bibitem[Huang(2025)]{huang2025maestro}
 Ken Huang.
 \newblock {Agentic {AI} Threat Modeling Framework: {MAESTRO}}.
-\newblock Cloud Security Alliance blog, 6 February 2025, 2025.
+\newblock Cloud Security Alliance blog, 6 February, 2025.
 \newblock URL \url{https://cloudsecurityalliance.org/blog/2025/02/06/agentic-ai-threat-modeling-framework-maestro}.
 
 \bibitem[Bhatt(2026)]{bhatt2026dairm}
 Divyendu Bhatt.
-\newblock {DAIRM-TR-0001}: {DAIRM}: Divyendu's data-state-aware {AI} reference model for generative {AI} inference systems.
-\newblock Technical Report / Working Draft Version 2.0.0, Independent, 2026.
+\newblock {DAIRM}: Divyendu's data-state-aware {AI} reference model for generative {AI} inference systems.
+\newblock Technical Report / Working Draft DAIRM-TR-0001, version 2.0.0, Independent, November 2026.
 \newblock Concept DOI covering all versions; supersedes AOSI v1.2.1, doi:10.5281/zenodo.24073122.
 
 \bibitem[Dijkstra(1968)]{dijkstra1968the}
@@ -148,10 +148,10 @@ Logan Smith.
 \newblock Blog post, 20 October 2026; repository github.com/Logans415/ai-layer-model, 2026.
 \newblock URL \url{https://logansmith.us/post-ai-layer-model.html}.
 
-\bibitem[{Dollhouse Research}()]{ailis}
-{Dollhouse Research}.
-\newblock {{AILIS} ({AI} Layer Interface Specification)}.
-\newblock Website and GitHub repository DollhouseMCP/AILIS.
+\bibitem[Darling(2025)]{ailis}
+Mick Darling.
+\newblock {AILIS}: A proposed layer model for {AI} systems.
+\newblock Version 0.2.0, Dollhouse Research; GitHub repository DollhouseMCP/AILIS, 2025.
 \newblock URL \url{https://ailis.dollhouseresearch.com/}.
 \newblock Accessed 9 November 2026.
 
@@ -203,6 +203,18 @@ Hai Lin, Hoilam Pao, Shaoxiong Zhan, and Hai-Tao Zheng.
 \newblock \emph{arXiv preprint arXiv:2606.00288}, 2026.
 \newblock URL \url{https://arxiv.org/abs/2606.00288}.
 
+\bibitem[Zhang et~al.(2024)Zhang, Xu, Wang, Xing, and Mao]{zhang2024layered}
+Dawen Zhang, Xiwei Xu, Chen Wang, Zhenchang Xing, and Robert Mao.
+\newblock A layered architecture for developing and enhancing capabilities in large language model-based software systems.
+\newblock arXiv preprint arXiv:2411.12357, 2024.
+\newblock URL \url{https://arxiv.org/abs/2411.12357}.
+
+\bibitem[Tsaih et~al.(2023)Tsaih, Chang, Hsu, and Yen]{tsaih2023stack}
+Rua-Huan Tsaih, Hsin-Lu Chang, Chih-Chun Hsu, and David~C. Yen.
+\newblock The {AI} tech-stack model.
+\newblock \emph{Communications of the ACM}, 66\penalty0 (3):\penalty0 69--77, 2023.
+\newblock \doi{10.1145/3568026}.
+
 \bibitem[{ISO/IEC JTC 1/SC 42}(2022{\natexlab{a}})]{iso22989}
 {ISO/IEC JTC 1/SC 42}.
 \newblock {{ISO/IEC} 22989:2022, Information technology -- Artificial intelligence -- Artificial intelligence concepts and terminology}.
@@ -239,11 +251,11 @@ Matt Bornstein and Rajko Radovanovic.
 \newblock URL \url{https://docs.cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning}.
 \newblock Accessed 9 November 2026.
 
-\bibitem[Kreuzberger et~al.(2022)Kreuzberger, K{\"u}hl, and Hirschl]{kreuzberger2022mlops}
+\bibitem[Kreuzberger et~al.(2023)Kreuzberger, K{\"u}hl, and Hirschl]{kreuzberger2023mlops}
 Dominik Kreuzberger, Niklas K{\"u}hl, and Sebastian Hirschl.
 \newblock Machine learning operations ({MLOps}): Overview, definition, and architecture.
-\newblock \emph{arXiv preprint arXiv:2205.02302}, 2022.
-\newblock URL \url{https://arxiv.org/abs/2205.02302}.
+\newblock \emph{IEEE Access}, 11:\penalty0 31866--31879, 2023.
+\newblock \doi{10.1109/ACCESS.2023.3262138}.
 
 \bibitem[Agrawal et~al.(2023)Agrawal, Panwar, Mohan, Kwatra, Gulavani, and Ramjee]{agrawal2023sarathi}
 Amey Agrawal, Ashish Panwar, Jayashree Mohan, Nipun Kwatra, Bhargav~S. Gulavani, and Ramachandran Ramjee.
@@ -254,8 +266,7 @@ Amey Agrawal, Ashish Panwar, Jayashree Mohan, Nipun Kwatra, Bhargav~S. Gulavani,
 \bibitem[Zhong et~al.(2024)Zhong, Liu, Chen, Hu, Zhu, Liu, Jin, and Zhang]{zhong2024distserve}
 Yinmin Zhong, Shengyu Liu, Junda Chen, Jianbo Hu, Yibo Zhu, Xuanzhe Liu, Xin Jin, and Hao Zhang.
 \newblock {DistServe}: Disaggregating prefill and decoding for goodput-optimized large language model serving.
-\newblock \emph{arXiv preprint arXiv:2401.09670}, 2024.
-\newblock URL \url{https://arxiv.org/abs/2401.09670}.
+\newblock In \emph{18th USENIX Symposium on Operating Systems Design and Implementation (OSDI 24)}, pages 193--210. USENIX Association, 2024.
 
 \bibitem[Miao et~al.(2023)Miao, Oliaro, Zhang, Cheng, Jin, Chen, and Jia]{miao2023serving}
 Xupeng Miao, Gabriele Oliaro, Zhihao Zhang, Xinhao Cheng, Hongyi Jin, Tianqi Chen, and Zhihao Jia.

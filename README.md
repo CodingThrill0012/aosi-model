@@ -38,7 +38,7 @@ Each part has its own tools, telemetry and owners, so when something goes wrong 
 
 DAIRM borrows the *method* of layered reference models such as OSI (ordered layers, service boundaries, named data units) and applies it to generative AI inference. It does **not** claim the layered-stack idea or the OSI analogy as new; earlier OSI-inspired AI models exist (see §3). Its contributions are limited to three things:
 
-1. **A named, observable data state at every boundary of the inference request path**, each of which exists per request and can be captured or measured.
+1. **A named, observable data state at every boundary of the inference request path**, each of which can be captured or measured: per request above the serving engine, and per scheduler step or device below it, joined to requests through a step identifier (`dairm.l4.step_id`).
 2. **A boundary-attributed latency diagnostic method** that separates context-service delay, serving-engine queueing or KV-cache pressure, and memory-bandwidth-bound decode.
 3. **A layer-indexed telemetry attribute set (`dairm.*`)** that makes the method executable on OpenTelemetry traces.
 
@@ -95,7 +95,8 @@ DAIRM was developed independently by the author. A review of related work after 
 - F.-J. Rodrigo-Ginés's [OSI-inspired stack for agentic AI](https://doi.org/10.5281/zenodo.17099409) (Sep 2025);
 - Cisco Research's proposed L8/L9 agent layers above OSI, Fleming et al., [arXiv:2511.19699](https://arxiv.org/abs/2511.19699) (Nov 2025);
 - the Cloud Security Alliance's [MAESTRO](https://cloudsecurityalliance.org/blog/2025/02/06/agentic-ai-threat-modeling-framework-maestro) seven-layer threat model for agentic AI (Feb 2025);
-- Logan Smith's [AI Layer Model](https://logansmith.us/post-ai-layer-model.html) (Oct 2026) and Dollhouse Research's [AILIS](https://ailis.dollhouseresearch.com/).
+- Logan Smith's [AI Layer Model](https://logansmith.us/post-ai-layer-model.html) (Oct 2026) and Mick Darling's [AILIS](https://ailis.dollhouseresearch.com/) (v0.2.0, Dollhouse Research, 2025);
+- software-architecture work on layered LLM systems, including Tsaih et al.'s [AI Tech-Stack Model](https://doi.org/10.1145/3568026) (CACM, 2023) and Zhang et al.'s [layered architecture for LLM-based software](https://arxiv.org/abs/2411.12357) (2024).
 
 To avoid confusion with Reilly's work, the model was renamed DAIRM in v2.0.0. DAIRM does not claim priority over any of these works. The full comparison is in [DAIRM-TR-0001 §10](docs/DAIRM-TR-0001.md#10-independent-development-and-related-work).
 
@@ -113,6 +114,7 @@ dairm/
 │   └── DAIRM-TR-0001.md       # The technical report (v2.0.0)
 ├── assets/                    # Figure sources (Mermaid, SVG generator) and the generated SVG
 ├── diagnostics/               # Runbooks, telemetry mappings and dashboards (planned)
+├── eval/                      # Small measured CPU-only fault-injection study (code, raw data, figures)
 ├── paper/                     # arXiv manuscript (LaTeX source, bibliography, PDF)
 └── ietf/                      # Internet-Draft version (draft-bhatt-dairm-00), not submitted
 ```
@@ -125,6 +127,7 @@ dairm/
 | Diagnostic method | [§7](docs/DAIRM-TR-0001.md#7-diagnostic-method) |
 | Security considerations | [§8](docs/DAIRM-TR-0001.md#8-security-considerations) |
 | Telemetry attributes | [Appendix B](docs/DAIRM-TR-0001.md#appendix-b-proposed-telemetry-attributes) |
+| Measured CPU-only study | [eval/](eval/README.md), [§7.6](docs/DAIRM-TR-0001.md#76-a-small-measured-study-cpu-only) |
 | Discussion | [GitHub Issues](https://github.com/CodingThrill0012/dairm/issues) |
 
 ---
@@ -161,9 +164,8 @@ https://doi.org/10.5281/zenodo.24073121
   author      = {Bhatt, Divyendu},
   title       = {{DAIRM}: Divyendu's Data-State-Aware {AI} Reference Model for Generative {AI} Inference Systems},
   type        = {Technical Report / Working Draft},
-  number      = {DAIRM-TR-0001},
+  number      = {DAIRM-TR-0001, version 2.0.0},
   institution = {Independent},
-  version     = {2.0.0},
   year        = {2026},
   month       = nov,
   doi         = {10.5281/zenodo.24073121},

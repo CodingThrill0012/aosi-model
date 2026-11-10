@@ -47,17 +47,20 @@ pip install xml2rfc           # Python
 3. Strips the source-line processing instructions and the empty author `<organization/>` element.
 4. Renders `.txt` and `.html`.
 
-## Validation (2026-11-09)
+## Validation (2026-11-10)
 
 | Tool | Result |
 |---|---|
 | xml2rfc 3.35.0 | 0 errors, 0 warnings |
-| idnits 2.x (text) | 0 errors, 0 flaws, 1 warning: "Couldn't figure out when the document was first submitted" (expected for a -00 draft) |
 | idnits 3 (XML and text) | PASS, no nits found |
+
+Only idnits 3 (the Node.js rewrite) was run. The classic idnits 2.x script was not run, because it failed to start in the build environment (it needs GNU awk). The Datatracker runs its own checks at upload.
 
 ## How to submit (later, only after review)
 
 Submission is public and permanent.
+
+**Re-date before upload.** The source carries `date: 2026-11-09`. Change `date:` in `draft-bhatt-dairm.md` to the upload date and rebuild, so that the draft's date and its six-month expiry are correct.
 
 1. Go to <https://datatracker.ietf.org/submit/>.
 2. Upload `draft-bhatt-dairm-00.xml`. The XML alone is enough; the Datatracker generates the text and HTML.

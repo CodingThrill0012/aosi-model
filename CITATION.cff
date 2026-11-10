@@ -35,7 +35,8 @@ abstract: >-
   diagnostic method; and a layer-indexed telemetry attribute set (dairm.*).
   DAIRM does not claim the layered-stack idea or the OSI analogy as novel and
   credits earlier OSI-inspired AI models. Version 2.0.0 supersedes AOSI v1.2.1:
-  the model was renamed and restructured after independent review, and an
+  the model was renamed and restructured after the author's own (AI-assisted)
+  review, not an external peer review, and an
   unsupported earlier drafting date was removed. Not an IETF RFC and not a
   standard.
 keywords:

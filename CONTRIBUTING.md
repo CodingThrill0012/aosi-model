@@ -75,7 +75,7 @@ A useful review is specific, located and falsifiable. When reviewing [DAIRM-TR-0
 1. **Read the core sections first:** §2 (Terminology), §3 (Design Principles), §4 (Architecture Overview) and §5 (Layer and Plane Descriptions).
 2. **Test the boundaries.** For each layer and plane, ask:
    - Is its purpose single and unambiguous (P1)?
-   - Is the data state at each boundary defined, per request, and observable (P2)?
+   - Is the data state at each boundary defined, observable, and capturable at its stated scope (per request, or per step or device and joinable to requests) (P2)?
    - Can a component you operate be placed in one layer or plane, or, if it spans several, can its parts be separated cleanly?
    - Are the failure modes and observability signals correct and complete?
 3. **Test the diagnostics.** Apply §7 to a real or reconstructed incident. Does the decomposition and triage lead to the right layer or plane? Where does it mislead?
