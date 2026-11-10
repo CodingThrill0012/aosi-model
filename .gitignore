@@ -1,0 +1,6 @@
+# Local study dependencies and caches (not part of the repository)
+__pycache__/
+*.pyc
+eval/venv/
+*.gguf
+llama-b*/
