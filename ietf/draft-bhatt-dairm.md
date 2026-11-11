@@ -1597,7 +1597,8 @@ not registered in any IANA registry.
 This document is derived from the technical report DAIRM-TR-0001,
 Version 2.0.0 {{DAIRM-TR-0001}}, maintained at
 https://github.com/CodingThrill0012/dairm and archived on Zenodo under
-the concept DOI 10.5281/zenodo.24073121.  Version 2.0.0 supersedes
+the concept DOI 10.5281/zenodo.24073121 (Version 2.0.0:
+10.5281/zenodo.24123645).  Version 2.0.0 supersedes
 the earlier release of the same work under the name "AOSI", version
 1.2.1 {{AOSI-V121}}.  The technical report carries additional
 material: per-layer interfaces, a full troubleshooting matrix, a

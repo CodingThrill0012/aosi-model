@@ -10,6 +10,9 @@ identifiers:
     value: "10.5281/zenodo.24073121"
     description: "Concept DOI (all versions)"
   - type: doi
+    value: "10.5281/zenodo.24123645"
+    description: "Version 2.0.0"
+  - type: doi
     value: "10.5281/zenodo.24073122"
     description: "Previous version: AOSI v1.2.1 (superseded by DAIRM v2.0.0)"
 license: CC-BY-4.0
@@ -61,7 +64,7 @@ preferred-citation:
   year: 2026
   month: 11
   status: preprint
-  doi: "10.5281/zenodo.24073121"
+  doi: "10.5281/zenodo.24123645"
   authors:
     - family-names: Bhatt
       given-names: Divyendu

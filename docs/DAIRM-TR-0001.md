@@ -723,7 +723,7 @@ Drafting, editing, formatting and figure preparation were assisted by AI tools. 
 ```text
 Bhatt, D. (2026). DAIRM-TR-0001: DAIRM: Divyendu's Data-State-Aware AI Reference Model for
 Generative AI Inference Systems (Version 2.0.0) [Technical report, working draft]. Zenodo.
-https://doi.org/10.5281/zenodo.24073121
+https://doi.org/10.5281/zenodo.24123645
 ```
 
 ```bibtex
@@ -735,9 +735,9 @@ https://doi.org/10.5281/zenodo.24073121
   institution = {Independent},
   year        = {2026},
   month       = nov,
-  doi         = {10.5281/zenodo.24073121},
+  doi         = {10.5281/zenodo.24123645},
   url         = {https://github.com/CodingThrill0012/dairm},
-  note        = {Concept DOI covering all versions. Supersedes AOSI v1.2.1 (doi:10.5281/zenodo.24073122). CC-BY-4.0}
+  note        = {Version 2.0.0 DOI; concept DOI for all versions: 10.5281/zenodo.24073121. Supersedes AOSI v1.2.1 (doi:10.5281/zenodo.24073122). CC-BY-4.0}
 }
 ```
 

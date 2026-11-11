@@ -7,7 +7,7 @@
 **Publication status:** IETF Internet-Draft draft-bhatt-dairm-00 prepared, submission pending (not yet submitted; no RFC number; not an IETF standard). arXiv submission pending.
 **License:** [CC-BY-4.0](LICENSE) · © 2026 Divyendu Bhatt · **Supersedes:** AOSI v1.2.1
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24073121.svg)](https://doi.org/10.5281/zenodo.24073121)
+[![DOI (all versions)](https://zenodo.org/badge/DOI/10.5281/zenodo.24073121.svg)](https://doi.org/10.5281/zenodo.24073121) [![DOI v2.0.0](https://zenodo.org/badge/DOI/10.5281/zenodo.24123645.svg)](https://doi.org/10.5281/zenodo.24123645)
 
 ![DAIRM overview: six request-path layers from L6 Application to L1 Physical Compute & Interconnect, the data state on each boundary, and the Context Services, Build/Deploy and Management planes](assets/dairm-overview.svg)
 
@@ -148,14 +148,14 @@ Guidelines are in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## 6. How to Cite
 
-Machine-readable metadata is in [`CITATION.cff`](CITATION.cff); GitHub's "Cite this repository" button uses it. The concept DOI [10.5281/zenodo.24073121](https://doi.org/10.5281/zenodo.24073121) covers all versions. Version 2.0.0 receives its own DOI when it is archived; the previous version, AOSI v1.2.1, is [10.5281/zenodo.24073122](https://doi.org/10.5281/zenodo.24073122).
+Machine-readable metadata is in [`CITATION.cff`](CITATION.cff); GitHub's "Cite this repository" button uses it. The concept DOI [10.5281/zenodo.24073121](https://doi.org/10.5281/zenodo.24073121) covers all versions. Version 2.0.0 is [10.5281/zenodo.24123645](https://doi.org/10.5281/zenodo.24123645); the previous version, AOSI v1.2.1, is [10.5281/zenodo.24073122](https://doi.org/10.5281/zenodo.24073122).
 
 **APA (7th ed.)**
 
 ```text
 Bhatt, D. (2026). DAIRM-TR-0001: DAIRM: Divyendu's Data-State-Aware AI Reference Model for
 Generative AI Inference Systems (Version 2.0.0) [Technical report, working draft]. Zenodo.
-https://doi.org/10.5281/zenodo.24073121
+https://doi.org/10.5281/zenodo.24123645
 ```
 
 **BibTeX**
@@ -169,9 +169,9 @@ https://doi.org/10.5281/zenodo.24073121
   institution = {Independent},
   year        = {2026},
   month       = nov,
-  doi         = {10.5281/zenodo.24073121},
+  doi         = {10.5281/zenodo.24123645},
   url         = {https://github.com/CodingThrill0012/dairm},
-  note        = {Concept DOI covering all versions. Supersedes AOSI v1.2.1 (doi:10.5281/zenodo.24073122). CC-BY-4.0}
+  note        = {Version 2.0.0 DOI; concept DOI for all versions: 10.5281/zenodo.24073121. Supersedes AOSI v1.2.1 (doi:10.5281/zenodo.24073122). CC-BY-4.0}
 }
 ```
 
