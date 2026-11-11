@@ -2,7 +2,7 @@
 
 This folder holds the IETF Internet-Draft version of DAIRM. It is derived from the technical report [DAIRM-TR-0001 v2.0.0](../docs/DAIRM-TR-0001.md), archived under the Zenodo concept DOI [10.5281/zenodo.24073121](https://doi.org/10.5281/zenodo.24073121). It replaces the earlier v1.2.1 draft source, which was never submitted.
 
-**Status: NOT SUBMITTED.** Nothing in this folder has been uploaded to the IETF Datatracker.
+**Status: prepared, submission pending.** draft-bhatt-dairm-00 has not yet been submitted: nothing in this folder has been uploaded to the IETF Datatracker. It has no RFC number and is not an IETF standard. (arXiv submission of the companion paper is also pending.)
 
 | Field | Value |
 |---|---|

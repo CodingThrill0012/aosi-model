@@ -6,6 +6,7 @@
 | **Title** | DAIRM: Divyendu's Data-State-Aware AI Reference Model for Generative AI Inference Systems |
 | **Version** | 2.0.0 |
 | **Status** | Technical Report / Working Draft. Not an IETF RFC and not a standard. Published for public review. |
+| **Publication status** | IETF Internet-Draft draft-bhatt-dairm-00 prepared, submission pending (not yet submitted; no RFC number; not an IETF standard). arXiv submission pending. |
 | **Author** | Divyendu Bhatt (independent researcher) |
 | **Contact** | Divyendu.bhatt@gmail.com · GitHub [@CodingThrill0012](https://github.com/CodingThrill0012) |
 | **Repository** | https://github.com/CodingThrill0012/dairm |
@@ -30,7 +31,7 @@ DAIRM does not claim the layered-stack idea or the OSI analogy as new; several e
 
 ## Status of This Document
 
-This is a **Technical Report / Working Draft**, version 2.0.0, published for public review. It is **not** an IETF RFC, it has not been adopted by any standards body, and it is not a standard. It is a single-author proposal. Comments, errata and change proposals are invited through the repository issue tracker under the process in [`CONTRIBUTING.md`](../CONTRIBUTING.md). The thresholds in §7 are illustrative and have not been measured.
+This is a **Technical Report / Working Draft**, version 2.0.0, published for public review. It is **not** an IETF RFC, it has not been adopted by any standards body, and it is not a standard. It is a single-author proposal. An IETF Internet-Draft version, draft-bhatt-dairm-00, has been prepared; its submission is pending (it has not yet been submitted, has no RFC number and is not an IETF standard). An arXiv submission of the companion paper is also pending. Comments, errata and change proposals are invited through the repository issue tracker under the process in [`CONTRIBUTING.md`](../CONTRIBUTING.md). The thresholds in §7 are illustrative and have not been measured.
 
 ---
 

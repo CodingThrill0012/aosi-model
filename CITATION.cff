@@ -37,7 +37,9 @@ abstract: >-
   credits earlier OSI-inspired AI models. Version 2.0.0 supersedes AOSI v1.2.1:
   the model was renamed and restructured after the author's own (AI-assisted)
   review, not an external peer review, and an
-  unsupported earlier drafting date was removed. Not an IETF RFC and not a
+  unsupported earlier drafting date was removed. IETF Internet-Draft
+  draft-bhatt-dairm-00 prepared, submission pending (not yet submitted; no RFC
+  number); arXiv submission pending. Not an IETF RFC and not a
   standard.
 keywords:
   - DAIRM

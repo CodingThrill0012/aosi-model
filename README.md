@@ -4,6 +4,7 @@
 
 **Author:** Divyendu Bhatt (independent researcher) · **Contact:** Divyendu.bhatt@gmail.com · [github.com/CodingThrill0012](https://github.com/CodingThrill0012)
 **Document:** [DAIRM-TR-0001](docs/DAIRM-TR-0001.md) · **Version:** 2.0.0 · **Status:** Technical Report / Working Draft (not an IETF RFC and not a standard)
+**Publication status:** IETF Internet-Draft draft-bhatt-dairm-00 prepared, submission pending (not yet submitted; no RFC number; not an IETF standard). arXiv submission pending.
 **License:** [CC-BY-4.0](LICENSE) · © 2026 Divyendu Bhatt · **Supersedes:** AOSI v1.2.1
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24073121.svg)](https://doi.org/10.5281/zenodo.24073121)
@@ -116,7 +117,7 @@ dairm/
 ├── diagnostics/               # Runbooks, telemetry mappings and dashboards (planned)
 ├── eval/                      # Small measured CPU-only fault-injection study (code, raw data, figures)
 ├── paper/                     # arXiv manuscript (LaTeX source, bibliography, PDF)
-└── ietf/                      # Internet-Draft version (draft-bhatt-dairm-00), not submitted
+└── ietf/                      # Internet-Draft version (draft-bhatt-dairm-00), submission pending
 ```
 
 | Resource | Link |
